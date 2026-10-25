@@ -688,3 +688,95 @@ a { text-decoration: none; }
     .file-actions { grid-column: 2; }
     .auth-card { padding: 24px; }
 }
+
+/* ================================
+   REGISTER PAGE FIX
+   ================================ */
+
+.auth-form {
+    width: 100%;
+}
+
+.auth-form .form-group {
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.auth-form .form-group label {
+    display: block;
+    width: 100%;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #182033;
+}
+
+.auth-form .form-group input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 48px;
+    padding: 0 15px;
+    border: 1px solid #d7dbea;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #182033;
+    font-size: 15px;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.auth-form .form-group input::placeholder {
+    color: #9aa1b2;
+}
+
+.auth-form .form-group input:focus {
+    border-color: #6254e8;
+    box-shadow: 0 0 0 3px rgba(98, 84, 232, 0.12);
+}
+
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 70px !important;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #5b4ee8;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.password-toggle:hover {
+    color: #4034c7;
+}
+
+.auth-form .auth-button {
+    width: 100%;
+    height: 50px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6254e8, #5143df);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.auth-form .auth-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(81, 67, 223, 0.25);
+}
