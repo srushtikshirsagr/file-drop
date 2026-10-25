@@ -1106,3 +1106,48 @@ a { text-decoration: none; }
         padding: 13px 16px;
     }
 }
+
+/* Admin Delete File Button */
+.admin-delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    min-width: 105px;
+    height: 38px;
+    padding: 0 16px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: linear-gradient(135deg, #ff5f6d, #e53935);
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    box-shadow: 0 4px 10px rgba(229, 57, 53, 0.18);
+}
+
+.admin-delete-btn:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, #ff4757, #d32f2f);
+    box-shadow: 0 7px 16px rgba(229, 57, 53, 0.28);
+}
+
+.admin-delete-btn:active {
+    transform: translateY(0);
+}
+
+.admin-table td:last-child {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.admin-table td:last-child form {
+    margin: 0;
+}
