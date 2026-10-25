@@ -2,161 +2,174 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
     <title>CloudDropper - Login</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
-
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 
 <body class="auth-page">
 
-<div class="auth-container">
+    <div class="auth-container">
 
-    <div class="auth-card">
+        <div class="auth-card">
 
+            <!-- BRAND -->
+            <div class="auth-brand">
 
-        <div class="auth-brand">
+                <div class="auth-logo">
+                    ☁
+                </div>
 
-            <div class="auth-logo">
-                ☁
+                <span>CloudDropper</span>
+
             </div>
 
-            <span>
-                CloudDropper
-            </span>
 
-        </div>
+            <!-- HEADING -->
+            <div class="auth-heading">
 
+                <h1>Welcome Back</h1>
 
-        <div class="auth-heading">
+                <p>
+                    Login to manage your cloud files.
+                </p>
 
-            <h1>
-                Welcome Back
-            </h1>
-
-            <p>
-                Login to manage your cloud files.
-            </p>
-
-        </div>
+            </div>
 
 
-        {% with messages =
-            get_flashed_messages(
-                with_categories=true
-            )
-        %}
+            <!-- FLASH MESSAGES -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
 
-            {% if messages %}
+                {% if messages %}
 
-                {% for category, message in messages %}
+                    {% for category, message in messages %}
 
-                    <div
-                        class="auth-message {{ category }}"
+                        <div class="auth-message {{ category }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                {% endif %}
+
+            {% endwith %}
+
+
+            <!-- LOGIN FORM -->
+            <form method="POST"
+                  action="{{ url_for('login') }}"
+                  class="auth-form">
+
+
+                <!-- EMAIL -->
+                <div class="form-group">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        autocomplete="email"
+                        required
                     >
-                        {{ message }}
-                    </div>
 
-                {% endfor %}
-
-            {% endif %}
-
-        {% endwith %}
+                </div>
 
 
-        <form
-            method="POST"
-            action="{{ url_for('login') }}"
-        >
+                <!-- PASSWORD -->
+                <div class="form-group">
 
-            <div class="auth-field">
+                    <label for="password">
+                        Password
+                    </label>
 
-                <label>
-                    Email
-                </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                        required
+                    >
 
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    required
-                >
-
-            </div>
+                </div>
 
 
-            <div class="auth-field">
-
-                <label>
-                    Password
-                </label>
-
-                <input
-                    type="password"
-                    name="password"
-                    id="loginPassword"
-                    placeholder="Enter your password"
-                    required
-                >
-
+                <!-- SHOW PASSWORD -->
                 <label class="show-password">
 
                     <input
                         type="checkbox"
-                        onclick="
-                            document.getElementById(
-                                'loginPassword'
-                            ).type =
-                            this.checked
-                            ? 'text'
-                            : 'password'
-                        "
+                        id="showPassword"
                     >
 
-                    Show password
+                    <span>Show password</span>
 
                 </label>
 
+
+                <!-- LOGIN BUTTON -->
+                <button
+                    type="submit"
+                    class="auth-button"
+                >
+                    Login
+                </button>
+
+            </form>
+
+
+            <!-- REGISTER LINK -->
+            <div class="auth-switch">
+
+                Don't have an account?
+
+                <a href="{{ url_for('register') }}">
+                    Create Account
+                </a>
+
             </div>
-
-
-            <button
-                type="submit"
-                class="auth-button"
-            >
-                Login
-            </button>
-
-        </form>
-
-
-        <div class="auth-switch">
-
-            Don't have an account?
-
-            <a
-                href="{{ url_for('register') }}"
-            >
-                Create Account
-            </a>
 
         </div>
 
     </div>
 
-</div>
+
+    <!-- SHOW / HIDE PASSWORD -->
+    <script>
+
+        const passwordInput =
+            document.getElementById("password");
+
+        const showPassword =
+            document.getElementById("showPassword");
+
+
+        showPassword.addEventListener("change", function () {
+
+            if (this.checked) {
+
+                passwordInput.type = "text";
+
+            } else {
+
+                passwordInput.type = "password";
+
+            }
+
+        });
+
+    </script>
 
 </body>
 
