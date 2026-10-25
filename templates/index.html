@@ -1,31 +1,45 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>CloudDropper</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <title>CloudDropper Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
 </head>
+
 
 <body>
 
-<!-- =========================
+<!-- =========================================================
      NAVBAR
-========================= -->
+========================================================= -->
 
 <nav class="top-navbar">
 
     <div class="brand">
-        <div class="brand-logo">☁</div>
+
+        <div class="brand-logo">
+            ☁
+        </div>
 
         <div class="brand-name">
             CloudDropper
         </div>
+
     </div>
+
 
     <div class="profile">
 
@@ -34,12 +48,21 @@
         </div>
 
         <div class="profile-info">
-            <strong>{{ user_name }}</strong>
-            <span>Cloud User</span>
+
+            <strong>
+                {{ user_name }}
+            </strong>
+
+            <span>
+                Storage User
+            </span>
+
         </div>
 
-        <a href="{{ url_for('logout') }}"
-           class="logout-btn">
+        <a
+            href="{{ url_for('logout') }}"
+            class="logout-btn"
+        >
             Logout
         </a>
 
@@ -48,16 +71,16 @@
 </nav>
 
 
-<!-- =========================
+<!-- =========================================================
      MAIN
-========================= -->
+========================================================= -->
 
 <main class="main-container">
 
 
-<!-- =========================
+<!-- =========================================================
      FLASH MESSAGES
-========================= -->
+========================================================= -->
 
 {% with messages = get_flashed_messages(with_categories=true) %}
 
@@ -68,7 +91,18 @@
             {% for category, message in messages %}
 
                 <div class="flash-message {{ category }}">
-                    {{ message }}
+
+                    <span>
+                        {{ message }}
+                    </span>
+
+                    <button
+                        type="button"
+                        class="flash-close"
+                    >
+                        ×
+                    </button>
+
                 </div>
 
             {% endfor %}
@@ -80,43 +114,48 @@
 {% endwith %}
 
 
-
-<!-- =========================
+<!-- =========================================================
      WELCOME
-========================= -->
+========================================================= -->
 
 <section class="welcome-section">
 
-    <div class="welcome-content">
+    <div>
 
-        <span class="welcome-label">
-            YOUR CLOUD WORKSPACE
-        </span>
+        <div class="welcome-kicker">
+            CLOUD FILE MANAGEMENT
+        </div>
 
         <h1>
             Welcome back, {{ user_name }} 👋
         </h1>
 
         <p>
-            Manage your files quickly and securely from one place.
+            Manage your files quickly and securely.
         </p>
 
     </div>
 
+
     <div class="cloud-status">
+
         <span class="status-dot"></span>
+
         Cloud Storage Active
+
     </div>
 
 </section>
 
 
-
-<!-- =========================
+<!-- =========================================================
      STAT CARDS
-========================= -->
+========================================================= -->
 
 <section class="stats-grid">
+
+
+    <!-- TOTAL FILES -->
 
     <div class="stat-card blue">
 
@@ -126,7 +165,9 @@
 
         <div class="stat-content">
 
-            <span>Total Files</span>
+            <span>
+                Total Files
+            </span>
 
             <strong>
                 {{ total_files }}
@@ -137,6 +178,8 @@
     </div>
 
 
+    <!-- STORAGE -->
+
     <div class="stat-card purple">
 
         <div class="stat-icon">
@@ -145,7 +188,9 @@
 
         <div class="stat-content">
 
-            <span>Storage Used</span>
+            <span>
+                Storage Used
+            </span>
 
             <strong>
                 {{ storage_used }} MB
@@ -156,6 +201,8 @@
     </div>
 
 
+    <!-- SUPPORTED -->
+
     <div class="stat-card orange">
 
         <div class="stat-icon">
@@ -164,7 +211,9 @@
 
         <div class="stat-content">
 
-            <span>Supported Files</span>
+            <span>
+                Supported Files
+            </span>
 
             <strong>
                 7 Types
@@ -174,21 +223,44 @@
 
     </div>
 
+
+    <!-- CLOUD -->
+
+    <div class="stat-card green">
+
+        <div class="stat-icon">
+            ☁
+        </div>
+
+        <div class="stat-content">
+
+            <span>
+                Cloud Status
+            </span>
+
+            <strong>
+                Active
+            </strong>
+
+        </div>
+
+    </div>
+
 </section>
 
 
-
-<!-- =========================
+<!-- =========================================================
      UPLOAD SECTION
-========================= -->
+========================================================= -->
 
 <section class="upload-section">
 
-    <div class="upload-heading">
+
+    <div class="upload-header">
 
         <div>
 
-            <span class="section-label">
+            <span class="section-kicker">
                 CLOUD UPLOAD
             </span>
 
@@ -197,10 +269,11 @@
             </h2>
 
             <p>
-                Select a file and send it directly to your cloud storage.
+                Select your file once and upload it securely.
             </p>
 
         </div>
+
 
         <div class="upload-limit">
             MAX 2 MB
@@ -209,36 +282,143 @@
     </div>
 
 
-    <!-- SUPPORTED TYPES -->
+    <!-- =====================================================
+         SUPPORTED FILE TYPE CARDS
+    ====================================================== -->
 
-    <div class="supported-file-info">
+    <div class="file-type-cards">
 
-        <div class="supported-title">
-            Supported formats
+
+        <div class="file-type-card image-card">
+
+            <div class="type-icon">
+                🖼️
+            </div>
+
+            <strong>
+                JPG
+            </strong>
+
+            <span>
+                Image
+            </span>
+
         </div>
 
-        <div class="supported-types">
 
-            <span class="type jpg">JPG</span>
-            <span class="type jpeg">JPEG</span>
-            <span class="type png">PNG</span>
-            <span class="type pdf">PDF</span>
-            <span class="type mp4">MP4</span>
-            <span class="type ppt">PPT</span>
-            <span class="type pptx">PPTX</span>
+        <div class="file-type-card image-card">
+
+            <div class="type-icon">
+                🌄
+            </div>
+
+            <strong>
+                JPEG
+            </strong>
+
+            <span>
+                Image
+            </span>
+
+        </div>
+
+
+        <div class="file-type-card image-card">
+
+            <div class="type-icon">
+                🟢
+            </div>
+
+            <strong>
+                PNG
+            </strong>
+
+            <span>
+                Image
+            </span>
+
+        </div>
+
+
+        <div class="file-type-card pdf-card">
+
+            <div class="type-icon">
+                📄
+            </div>
+
+            <strong>
+                PDF
+            </strong>
+
+            <span>
+                Document
+            </span>
+
+        </div>
+
+
+        <div class="file-type-card video-card">
+
+            <div class="type-icon">
+                🎬
+            </div>
+
+            <strong>
+                MP4
+            </strong>
+
+            <span>
+                Video
+            </span>
+
+        </div>
+
+
+        <div class="file-type-card ppt-card">
+
+            <div class="type-icon">
+                📊
+            </div>
+
+            <strong>
+                PPT
+            </strong>
+
+            <span>
+                Presentation
+            </span>
+
+        </div>
+
+
+        <div class="file-type-card ppt-card">
+
+            <div class="type-icon">
+                📈
+            </div>
+
+            <strong>
+                PPTX
+            </strong>
+
+            <span>
+                Presentation
+            </span>
 
         </div>
 
     </div>
 
 
-    <!-- UPLOAD FORM -->
+    <!-- =====================================================
+         UPLOAD FORM
+    ====================================================== -->
 
     <form
+        id="uploadForm"
         action="{{ url_for('upload_file') }}"
         method="POST"
         enctype="multipart/form-data"
-        id="uploadForm"
     >
 
         <div
@@ -246,20 +426,21 @@
             id="uploadBox"
         >
 
+
             <div class="upload-cloud-icon">
                 ☁️
             </div>
 
+
             <h3>
-                Drop your file here
+                Choose a file to upload
             </h3>
 
+
             <p>
-                or choose a file from your computer
+                Drag & drop your file here or browse from your computer
             </p>
 
-
-            <!-- FILE INPUT -->
 
             <div class="file-input-wrapper">
 
@@ -274,4 +455,334 @@
                 <label
                     for="fileInput"
                     class="file-select-btn"
-                    id="file
+                >
+                    Browse Computer
+                </label>
+
+            </div>
+
+
+            <div
+                id="fileNamePreview"
+                class="file-name-preview"
+            >
+            </div>
+
+
+            <div
+                id="uploadStatus"
+                class="upload-status"
+            >
+            </div>
+
+
+        </div>
+
+
+        <!-- =================================================
+             UPLOAD BUTTON
+        ================================================== -->
+
+        <div class="upload-action-area">
+
+            <button
+                type="submit"
+                class="upload-button"
+                id="uploadButton"
+            >
+                ☁ Upload to Cloud
+            </button>
+
+        </div>
+
+    </form>
+
+</section>
+
+
+<!-- =========================================================
+     STORED FILES
+     DO NOT REMOVE THIS SECTION
+========================================================= -->
+
+<section
+    class="files-section"
+    id="storedFiles"
+>
+
+
+    <div class="files-top">
+
+        <div>
+
+            <span class="section-kicker">
+                YOUR CLOUD
+            </span>
+
+            <h2>
+                Stored Files
+            </h2>
+
+            <p>
+                Your uploaded files are shown here.
+            </p>
+
+        </div>
+
+
+        <div class="file-count">
+
+            {{ files|length }}
+
+            {% if files|length == 1 %}
+                file
+            {% else %}
+                files
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         SEARCH / FILTER
+    ====================================================== -->
+
+    <form
+        method="GET"
+        action="{{ url_for('dashboard') }}"
+        class="search-bar"
+        id="filterForm"
+    >
+
+        <input
+            type="text"
+            name="search"
+            class="search-input"
+            placeholder="🔍 Search filenames..."
+            value="{{ search }}"
+        >
+
+
+        <select
+            name="file_type"
+            id="fileType"
+        >
+
+            <option value="">
+                All File Types
+            </option>
+
+            <option
+                value="jpg"
+                {% if selected_type == "jpg" %}selected{% endif %}
+            >
+                JPG
+            </option>
+
+            <option
+                value="jpeg"
+                {% if selected_type == "jpeg" %}selected{% endif %}
+            >
+                JPEG
+            </option>
+
+            <option
+                value="png"
+                {% if selected_type == "png" %}selected{% endif %}
+            >
+                PNG
+            </option>
+
+            <option
+                value="pdf"
+                {% if selected_type == "pdf" %}selected{% endif %}
+            >
+                PDF
+            </option>
+
+            <option
+                value="mp4"
+                {% if selected_type == "mp4" %}selected{% endif %}
+            >
+                MP4
+            </option>
+
+            <option
+                value="ppt"
+                {% if selected_type == "ppt" %}selected{% endif %}
+            >
+                PPT
+            </option>
+
+            <option
+                value="pptx"
+                {% if selected_type == "pptx" %}selected{% endif %}
+            >
+                PPTX
+            </option>
+
+        </select>
+
+
+        <button
+            type="submit"
+            class="filter-btn"
+        >
+            Filter
+        </button>
+
+
+        {% if search or selected_type %}
+
+            <a
+                href="{{ url_for('dashboard') }}"
+                class="clear-filter-btn"
+            >
+                Clear
+            </a>
+
+        {% endif %}
+
+    </form>
+
+
+    <!-- =====================================================
+         FILE LIST
+    ====================================================== -->
+
+    {% if files %}
+
+        <div class="file-list">
+
+            {% for file in files %}
+
+                <div class="file-row">
+
+
+                    <div class="file-type-icon">
+
+                        {{ file.icon }}
+
+                    </div>
+
+
+                    <div class="file-details">
+
+                        <strong>
+                            {{ file.name }}
+                        </strong>
+
+                        <span>
+
+                            {{ file.type|upper }}
+
+                            •
+                            
+                            {{ "%.2f"|format(
+                                file.size / 1024 / 1024
+                            ) }}
+
+                            MB
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="file-date">
+
+                        {{ file.uploaded_at }}
+
+                    </div>
+
+
+                    <!-- ACTIONS -->
+
+                    <div class="file-actions">
+
+
+                        <a
+                            href="{{ url_for(
+                                'download_file',
+                                file_id=file.id
+                            ) }}"
+                            class="download-btn"
+                        >
+                            ⬇ Download
+                        </a>
+
+
+                        <form
+                            method="POST"
+                            action="{{ url_for(
+                                'delete_file',
+                                file_id=file.id
+                            ) }}"
+                            class="delete-form"
+                            onsubmit="
+                                return confirm(
+                                    'Are you sure you want to delete this file?'
+                                );
+                            "
+                        >
+
+                            <button
+                                type="submit"
+                                class="delete-btn"
+                            >
+                                🗑 Delete
+                            </button>
+
+                        </form>
+
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+    {% else %}
+
+
+        <!-- EMPTY STATE -->
+
+        <div class="empty-files">
+
+            <div class="empty-icon">
+                📂
+            </div>
+
+            <h3>
+                No files found
+            </h3>
+
+            <p>
+                Upload your first file to start using CloudDropper.
+            </p>
+
+        </div>
+
+
+    {% endif %}
+
+
+</section>
+
+
+</main>
+
+
+<script
+    src="{{ url_for('static', filename='script.js') }}"
+></script>
+
+
+</body>
+
+</html>

@@ -1,11 +1,41 @@
 document.addEventListener("DOMContentLoaded", function () {
 
-    const fileInput = document.getElementById("fileInput");
-    const uploadBox = document.getElementById("uploadBox");
-    const fileNamePreview = document.getElementById("fileNamePreview");
-    const uploadForm = document.getElementById("uploadForm");
+    // =========================================================
+    // ELEMENTS
+    // =========================================================
 
-    const maxSize = 2 * 1024 * 1024;
+    const fileInput =
+        document.getElementById("fileInput");
+
+    const uploadBox =
+        document.getElementById("uploadBox");
+
+    const uploadForm =
+        document.getElementById("uploadForm");
+
+    const uploadButton =
+        document.getElementById("uploadButton");
+
+    const fileNamePreview =
+        document.getElementById("fileNamePreview");
+
+    const uploadStatus =
+        document.getElementById("uploadStatus");
+
+    const storedFiles =
+        document.getElementById("storedFiles");
+
+    const filterForm =
+        document.getElementById("filterForm");
+
+
+    // =========================================================
+    // SETTINGS
+    // =========================================================
+
+    const maxSize =
+        2 * 1024 * 1024;
+
 
     const allowedExtensions = [
         "jpg",
@@ -18,312 +48,514 @@ document.addEventListener("DOMContentLoaded", function () {
     ];
 
 
-    /* =====================================================
-       FILE SELECTION
-       ===================================================== */
+    // =========================================================
+    // SHOW STATUS
+    // =========================================================
+
+    function showUploadStatus(message, type = "success") {
+
+        if (!uploadStatus) {
+            return;
+        }
+
+        uploadStatus.textContent = message;
+
+        uploadStatus.className =
+            "upload-status " + type;
+
+        setTimeout(function () {
+
+            uploadStatus.textContent = "";
+
+            uploadStatus.className =
+                "upload-status";
+
+        }, 3000);
+    }
+
+
+    // =========================================================
+    // FILE VALIDATION
+    // =========================================================
+
+    function validateFile(file) {
+
+        if (!file) {
+            return false;
+        }
+
+
+        const fileName =
+            file.name;
+
+
+        const extension =
+            fileName
+                .split(".")
+                .pop()
+                .toLowerCase();
+
+
+        // FILE TYPE
+
+        if (!allowedExtensions.includes(extension)) {
+
+            showUploadStatus(
+                "File type is not supported.",
+                "error"
+            );
+
+            fileInput.value = "";
+
+            if (fileNamePreview) {
+                fileNamePreview.textContent = "";
+            }
+
+            return false;
+        }
+
+
+        // FILE SIZE
+
+        if (file.size > maxSize) {
+
+            showUploadStatus(
+                "File size must be less than 2 MB.",
+                "error"
+            );
+
+            fileInput.value = "";
+
+            if (fileNamePreview) {
+                fileNamePreview.textContent = "";
+            }
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    // =========================================================
+    // DISPLAY SELECTED FILE
+    // =========================================================
 
     function showFile(file) {
 
-        if (!file) {
-            return;
-        }
-
-        const fileName = file.name;
-
-        const extension = fileName
-            .split(".")
-            .pop()
-            .toLowerCase();
-
-
-        // File type validation
-        if (!allowedExtensions.includes(extension)) {
-
-            showTemporaryMessage(
-                "File type not supported. Allowed: JPG, JPEG, PNG, PDF, MP4, PPT, PPTX",
-                "danger"
-            );
-
-            fileInput.value = "";
-
-            if (fileNamePreview) {
-                fileNamePreview.textContent = "No file selected";
-            }
-
+        if (!validateFile(file)) {
             return;
         }
 
 
-        // File size validation
-        if (file.size > maxSize) {
-
-            showTemporaryMessage(
-                "File size must be less than 2 MB.",
-                "danger"
-            );
-
-            fileInput.value = "";
-
-            if (fileNamePreview) {
-                fileNamePreview.textContent = "No file selected";
-            }
-
-            return;
-        }
-
-
-        // Display selected file
         if (fileNamePreview) {
 
             const sizeMB =
-                (file.size / 1024 / 1024).toFixed(2);
+                (
+                    file.size /
+                    1024 /
+                    1024
+                ).toFixed(2);
 
-            fileNamePreview.textContent =
-                "✓ " + fileName + " • " + sizeMB + " MB";
+
+            fileNamePreview.innerHTML =
+                `
+                <span class="selected-file-icon">✓</span>
+                <strong>${escapeHtml(file.name)}</strong>
+                <span>(${sizeMB} MB)</span>
+                `;
         }
+
+
+        showUploadStatus(
+            "File selected. Ready to upload.",
+            "success"
+        );
     }
 
 
-    /* =====================================================
-       NORMAL FILE SELECTION
-       ===================================================== */
+    // =========================================================
+    // ESCAPE HTML
+    // =========================================================
+
+    function escapeHtml(text) {
+
+        const div =
+            document.createElement("div");
+
+        div.textContent =
+            text;
+
+        return div.innerHTML;
+    }
+
+
+    // =========================================================
+    // FILE PICKER
+    // =========================================================
 
     if (fileInput) {
 
-        fileInput.addEventListener("change", function () {
+        fileInput.addEventListener(
+            "change",
+            function () {
 
-            const file = this.files[0];
+                const file =
+                    this.files[0];
 
-            showFile(file);
-        });
+                showFile(file);
+
+            }
+        );
     }
 
 
-    /* =====================================================
-       DRAG AND DROP
-       ===================================================== */
+    // =========================================================
+    // DRAG AND DROP
+    // =========================================================
 
     if (uploadBox) {
 
-        uploadBox.addEventListener("dragover", function (event) {
-
-            event.preventDefault();
-
-            uploadBox.classList.add("dragover");
-        });
-
-
-        uploadBox.addEventListener("dragleave", function () {
-
-            uploadBox.classList.remove("dragover");
-        });
-
-
-        uploadBox.addEventListener("drop", function (event) {
-
-            event.preventDefault();
-
-            uploadBox.classList.remove("dragover");
-
-            const files = event.dataTransfer.files;
-
-            if (files.length === 0) {
-                return;
-            }
-
-            const file = files[0];
-
-            try {
-
-                const dataTransfer =
-                    new DataTransfer();
-
-                dataTransfer.items.add(file);
-
-                fileInput.files =
-                    dataTransfer.files;
-
-            } catch (error) {
-
-                console.log(
-                    "Could not assign dropped file."
-                );
-            }
-
-            showFile(file);
-        });
-    }
-
-
-    /* =====================================================
-       IMPORTANT:
-       DO NOT MAKE THE WHOLE UPLOAD BOX CLICKABLE
-       ===================================================== */
-
-    // There is intentionally NO uploadBox.click()
-    // handler here.
-
-    // The browser file picker opens ONLY when the user
-    // presses "Choose File".
-
-
-
-    /* =====================================================
-       PREVENT DOUBLE SUBMISSION
-       ===================================================== */
-
-    if (uploadForm) {
-
-        uploadForm.addEventListener("submit", function (event) {
-
-            if (!fileInput || !fileInput.files.length) {
+        uploadBox.addEventListener(
+            "dragover",
+            function (event) {
 
                 event.preventDefault();
 
-                showTemporaryMessage(
-                    "Please select a file first.",
-                    "danger"
+                uploadBox.classList.add(
+                    "dragover"
+                );
+            }
+        );
+
+
+        uploadBox.addEventListener(
+            "dragleave",
+            function () {
+
+                uploadBox.classList.remove(
+                    "dragover"
+                );
+            }
+        );
+
+
+        uploadBox.addEventListener(
+            "drop",
+            function (event) {
+
+                event.preventDefault();
+
+                uploadBox.classList.remove(
+                    "dragover"
                 );
 
-                return;
+
+                const files =
+                    event.dataTransfer.files;
+
+
+                if (files.length === 0) {
+                    return;
+                }
+
+
+                const file =
+                    files[0];
+
+
+                if (!validateFile(file)) {
+                    return;
+                }
+
+
+                try {
+
+                    const dataTransfer =
+                        new DataTransfer();
+
+                    dataTransfer.items.add(
+                        file
+                    );
+
+                    fileInput.files =
+                        dataTransfer.files;
+
+                }
+                catch (error) {
+
+                    console.log(
+                        "Could not assign dropped file."
+                    );
+                }
+
+
+                showFile(file);
             }
-
-
-            const uploadButton =
-                document.getElementById("uploadButton");
-
-
-            if (uploadButton) {
-
-                uploadButton.disabled = true;
-
-                uploadButton.innerHTML =
-                    "⏳ Uploading...";
-            }
-
-        });
+        );
     }
 
 
+    // =========================================================
+    // IMPORTANT:
+    // DO NOT OPEN FILE PICKER WHEN UPLOAD BOX IS CLICKED
+    //
+    // Only "Browse Computer" opens the file picker.
+    // =========================================================
 
-    /* =====================================================
-       FLASH MESSAGE AUTO HIDE
-       ===================================================== */
+    if (uploadBox) {
+
+        uploadBox.addEventListener(
+            "click",
+            function (event) {
+
+                const clickedBrowseButton =
+                    event.target.closest(
+                        ".file-select-btn"
+                    );
+
+
+                const clickedInput =
+                    event.target.closest(
+                        "#fileInput"
+                    );
+
+
+                if (
+                    clickedBrowseButton ||
+                    clickedInput
+                ) {
+
+                    return;
+                }
+
+
+                // Do nothing.
+                //
+                // This prevents clicking the upload area
+                // from opening the computer file picker.
+
+            }
+        );
+    }
+
+
+    // =========================================================
+    // UPLOAD FORM
+    // =========================================================
+
+    if (uploadForm) {
+
+        uploadForm.addEventListener(
+            "submit",
+            function (event) {
+
+                if (
+                    !fileInput ||
+                    !fileInput.files ||
+                    fileInput.files.length === 0
+                ) {
+
+                    event.preventDefault();
+
+                    showUploadStatus(
+                        "Please select a file first.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                const file =
+                    fileInput.files[0];
+
+
+                if (!validateFile(file)) {
+
+                    event.preventDefault();
+
+                    return;
+                }
+
+
+                // IMPORTANT:
+                // Upload button does NOT open picker.
+
+                if (uploadButton) {
+
+                    uploadButton.disabled =
+                        true;
+
+                    uploadButton.innerHTML =
+                        "⏳ Uploading...";
+
+                    uploadButton.classList.add(
+                        "uploading"
+                    );
+                }
+
+
+                showUploadStatus(
+                    "Uploading your file to the cloud...",
+                    "success"
+                );
+
+
+                // Browser submits the form normally.
+                // Flask handles S3 + RDS.
+
+            }
+        );
+    }
+
+
+    // =========================================================
+    // FLASH MESSAGE AUTO HIDE
+    // =========================================================
 
     const flashMessages =
-        document.querySelectorAll(".flash-message");
+        document.querySelectorAll(
+            ".flash-message"
+        );
 
 
     flashMessages.forEach(function (message) {
 
+        const closeButton =
+            message.querySelector(
+                ".flash-close"
+            );
+
+
+        if (closeButton) {
+
+            closeButton.addEventListener(
+                "click",
+                function () {
+
+                    hideFlash(message);
+
+                }
+            );
+        }
+
+
         setTimeout(function () {
 
-            message.classList.add("message-hide");
-
-            setTimeout(function () {
-
-                message.remove();
-
-            }, 400);
+            hideFlash(message);
 
         }, 3000);
 
     });
 
 
+    function hideFlash(element) {
 
-    /* =====================================================
-       TEMPORARY FRONTEND MESSAGE
-       ===================================================== */
-
-    function showTemporaryMessage(text, type) {
-
-        let container =
-            document.querySelector(".flash-container");
-
-
-        if (!container) {
-
-            container =
-                document.createElement("div");
-
-            container.className =
-                "flash-container";
-
-            document.body.appendChild(container);
+        if (!element) {
+            return;
         }
 
 
-        const message =
-            document.createElement("div");
-
-        message.className =
-            "flash-message " + type;
-
-        message.textContent =
-            text;
-
-
-        container.appendChild(message);
+        element.classList.add(
+            "flash-hide"
+        );
 
 
         setTimeout(function () {
 
-            message.classList.add("message-hide");
+            if (element.parentNode) {
 
-            setTimeout(function () {
+                element.parentNode.removeChild(
+                    element
+                );
 
-                message.remove();
+            }
 
-            }, 400);
+        }, 350);
 
-        }, 3000);
     }
 
 
-
-    /* =====================================================
-       PRESERVE SCROLL POSITION AFTER FILTER
-       ===================================================== */
-
-    const filterForm =
-        document.querySelector(".search-bar");
-
+    // =========================================================
+    // FILTER POSITION
+    // =========================================================
 
     if (filterForm) {
 
-        filterForm.addEventListener("submit", function () {
+        filterForm.addEventListener(
+            "submit",
+            function () {
 
-            sessionStorage.setItem(
-                "cloudDropperScrollPosition",
-                window.scrollY
-            );
+                if (!storedFiles) {
+                    return;
+                }
 
-        });
+
+                sessionStorage.setItem(
+                    "cloudDropperStoredFilesScroll",
+                    window.scrollY.toString()
+                );
+
+            }
+        );
     }
 
 
-    const savedScrollPosition =
+    // =========================================================
+    // RESTORE FILTER POSITION
+    // =========================================================
+
+    const savedScroll =
         sessionStorage.getItem(
-            "cloudDropperScrollPosition"
+            "cloudDropperStoredFilesScroll"
         );
 
 
-    if (savedScrollPosition !== null) {
+    if (savedScroll !== null) {
 
         sessionStorage.removeItem(
-            "cloudDropperScrollPosition"
+            "cloudDropperStoredFilesScroll"
         );
 
 
-        window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(
+            function () {
 
-            window.scrollTo(
-                0,
-                parseInt(savedScrollPosition, 10)
-            );
+                const storedSection =
+                    document.getElementById(
+                        "storedFiles"
+                    );
 
-        });
+
+                if (storedSection) {
+
+                    const sectionTop =
+                        storedSection.getBoundingClientRect().top
+                        + window.scrollY;
+
+
+                    // Keep user around Stored Files
+                    // rather than sending them to top.
+
+                    const target =
+                        Math.max(
+                            0,
+                            sectionTop - 25
+                        );
+
+
+                    window.scrollTo({
+                        top: target,
+                        behavior: "instant"
+                    });
+
+                }
+
+            }
+        );
     }
+
 
 });

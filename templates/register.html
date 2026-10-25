@@ -5,27 +5,27 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>CloudDropper | Create Account</title>
+    <title>CloudDropper - Register</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
 
 </head>
 
 
 <body class="auth-page">
 
-
 <div class="auth-container">
-
 
     <div class="auth-card">
 
-
-        <!-- LOGO -->
 
         <div class="auth-brand">
 
@@ -40,30 +40,32 @@
         </div>
 
 
-        <!-- HEADING -->
-
         <div class="auth-heading">
 
             <h1>
-                Create your account
+                Create Account
             </h1>
 
             <p>
-                Start managing your files in one place
+                Start managing your cloud files.
             </p>
 
         </div>
 
 
-        <!-- FLASH MESSAGE -->
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% with messages =
+            get_flashed_messages(
+                with_categories=true
+            )
+        %}
 
             {% if messages %}
 
                 {% for category, message in messages %}
 
-                    <div class="auth-message {{ category }}">
+                    <div
+                        class="auth-message {{ category }}"
+                    >
                         {{ message }}
                     </div>
 
@@ -74,24 +76,22 @@
         {% endwith %}
 
 
-        <!-- REGISTER FORM -->
-
-        <form method="POST"
-              action="{{ url_for('register') }}">
+        <form
+            method="POST"
+            action="{{ url_for('register') }}"
+        >
 
 
             <div class="auth-field">
 
-                <label for="name">
-                    Full name
+                <label>
+                    Full Name
                 </label>
 
                 <input
                     type="text"
-                    id="name"
                     name="name"
-                    placeholder="Enter your full name"
-                    autocomplete="name"
+                    placeholder="Enter your name"
                     required
                 >
 
@@ -100,16 +100,14 @@
 
             <div class="auth-field">
 
-                <label for="email">
-                    Email address
+                <label>
+                    Email
                 </label>
 
                 <input
                     type="email"
-                    id="email"
                     name="email"
                     placeholder="Enter your email"
-                    autocomplete="email"
                     required
                 >
 
@@ -118,60 +116,57 @@
 
             <div class="auth-field">
 
-                <label for="registerPassword">
+                <label>
                     Password
                 </label>
 
                 <input
                     type="password"
-                    id="registerPassword"
                     name="password"
-                    placeholder="Create your password"
-                    autocomplete="new-password"
+                    id="registerPassword"
+                    placeholder="Create a password"
                     required
                 >
-
 
                 <label class="show-password">
 
                     <input
                         type="checkbox"
-                        onclick="togglePassword('registerPassword')"
+                        onclick="
+                            document.getElementById(
+                                'registerPassword'
+                            ).type =
+                            this.checked
+                            ? 'text'
+                            : 'password'
+                        "
                     >
 
-                    <span>
-                        Show password
-                    </span>
+                    Show password
 
                 </label>
-
-
-                <div class="password-hint">
-                    Password must contain at least 3 numbers.
-                </div>
 
             </div>
 
 
             <button
                 type="submit"
-                class="auth-button">
-
+                class="auth-button"
+            >
                 Create Account
-
             </button>
 
 
         </form>
 
 
-        <!-- LOGIN LINK -->
-
         <div class="auth-switch">
 
             Already have an account?
 
-            <a href="{{ url_for('login') }}">
+            <a
+                href="{{ url_for('login') }}"
+            >
                 Login
             </a>
 
@@ -180,25 +175,7 @@
 
     </div>
 
-
 </div>
-
-
-<script>
-
-function togglePassword(id) {
-
-    const password =
-        document.getElementById(id);
-
-    password.type =
-        password.type === "password"
-            ? "text"
-            : "password";
-}
-
-</script>
-
 
 </body>
 

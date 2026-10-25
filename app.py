@@ -2,28 +2,27 @@ from flask import (
     Flask,
     render_template,
     request,
-    flash,
     redirect,
     url_for,
+    flash,
     session,
     send_file
 )
 
-from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-from io import BytesIO
-from dotenv import load_dotenv
-from botocore.exceptions import BotoCoreError, ClientError
+import os
+import io
+from datetime import datetime
 
 import boto3
 import psycopg2
-import os
-import uuid
+from psycopg2 import IntegrityError
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
+from botocore.exceptions import ClientError, NoCredentialsError
 
 
 # ============================================================
-# LOAD ENVIRONMENT VARIABLES
+# CONFIGURATION
 # ============================================================
 
 load_dotenv()
@@ -32,27 +31,11 @@ app = Flask(__name__)
 
 app.secret_key = os.getenv(
     "FLASK_SECRET_KEY",
-    "change-this-secret-key"
+    "cloud-dropper-secret-2026"
 )
 
-
-# ============================================================
-# AWS CONFIGURATION
-# ============================================================
-
-AWS_REGION = os.getenv(
-    "AWS_REGION",
-    "ap-south-1"
-)
-
-AWS_BUCKET_NAME = os.getenv(
-    "AWS_BUCKET_NAME"
-)
-
-
-# ============================================================
-# DATABASE CONFIGURATION
-# ============================================================
+AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
+AWS_BUCKET_NAME = os.getenv("AWS_BUCKET_NAME")
 
 DB_HOST = os.getenv("DB_HOST")
 DB_PORT = os.getenv("DB_PORT", "5432")
@@ -62,7 +45,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 
 
 # ============================================================
-# FILE SETTINGS
+# FILE CONFIGURATION
 # ============================================================
 
 ALLOWED_EXTENSIONS = {
@@ -75,34 +58,17 @@ ALLOWED_EXTENSIONS = {
     "pptx"
 }
 
-# Maximum file size = 2 MB
 MAX_FILE_SIZE = 2 * 1024 * 1024
 
 
-FILE_ICONS = {
-    "jpg": "🖼️",
-    "jpeg": "🖼️",
-    "png": "🖼️",
-    "pdf": "📄",
-    "mp4": "🎬",
-    "ppt": "📊",
-    "pptx": "📊"
-}
-
-
 # ============================================================
-# AWS S3 CONNECTION
+# AWS S3
 # ============================================================
 
 def get_s3_client():
     """
-    Creates an S3 client.
-
-    On EC2, boto3 automatically uses the IAM Role
-    attached to the EC2 instance.
-
-    Therefore, AWS access keys are not stored
-    inside the application code.
+    On EC2, boto3 uses the IAM role attached to the instance.
+    No AWS access key is stored in the project.
     """
 
     return boto3.client(
@@ -116,108 +82,78 @@ def get_s3_client():
 # ============================================================
 
 def get_db_connection():
-    """
-    Connects Flask to PostgreSQL RDS.
-    """
 
     return psycopg2.connect(
         host=DB_HOST,
         port=DB_PORT,
-        database=DB_NAME,
+        dbname=DB_NAME,
         user=DB_USER,
         password=DB_PASSWORD
     )
 
 
 # ============================================================
-# CREATE DATABASE TABLES
+# DATABASE TABLES
 # ============================================================
 
 def create_tables():
 
-    connection = None
+    conn = None
     cursor = None
 
     try:
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
-        # -------------------------
         # USERS TABLE
-        # -------------------------
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
+                email VARCHAR(150) UNIQUE NOT NULL,
+                password VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+            );
         """)
 
-        # -------------------------
         # FILES TABLE
-        # -------------------------
-
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS files (
                 id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id)
-                    ON DELETE CASCADE,
-                filename VARCHAR(255) NOT NULL,
+                user_id INTEGER NOT NULL,
+                name VARCHAR(255) NOT NULL,
                 s3_key VARCHAR(500) NOT NULL,
-                file_type VARCHAR(50),
-                file_size BIGINT,
-                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+                file_type VARCHAR(20) NOT NULL,
+                file_size BIGINT NOT NULL,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                CONSTRAINT fk_user
+                FOREIGN KEY (user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE
+            );
         """)
 
-        connection.commit()
+        conn.commit()
 
         print("Database tables are ready.")
 
-    except Exception as error:
+    except Exception as e:
 
-        print("Database setup error:", error)
+        print("Database table error:", e)
 
     finally:
 
         if cursor:
             cursor.close()
 
-        if connection:
-            connection.close()
+        if conn:
+            conn.close()
 
 
 # ============================================================
-# LOGIN REQUIRED DECORATOR
-# ============================================================
-
-def login_required(function):
-
-    @wraps(function)
-    def decorated_function(*args, **kwargs):
-
-        if "user_id" not in session:
-
-            flash(
-                "Please login first.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("login")
-            )
-
-        return function(*args, **kwargs)
-
-    return decorated_function
-
-
-# ============================================================
-# CHECK FILE TYPE
+# HELPERS
 # ============================================================
 
 def allowed_file(filename):
@@ -229,110 +165,37 @@ def allowed_file(filename):
     )
 
 
+def get_file_icon(file_type):
+
+    icons = {
+        "jpg": "🖼️",
+        "jpeg": "🌄",
+        "png": "🟢",
+        "pdf": "📄",
+        "mp4": "🎬",
+        "ppt": "📊",
+        "pptx": "📈"
+    }
+
+    return icons.get(file_type.lower(), "📁")
+
+
+def get_current_user():
+
+    return session.get("user_id")
+
+
 # ============================================================
-# GET USER FILES
+# HOME
 # ============================================================
 
-def get_user_files(
-    user_id,
-    search="",
-    file_type=""
-):
+@app.route("/")
+def home():
 
-    connection = None
-    cursor = None
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
 
-    try:
-
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        query = """
-            SELECT
-                id,
-                filename,
-                s3_key,
-                file_type,
-                file_size,
-                uploaded_at
-            FROM files
-            WHERE user_id = %s
-        """
-
-        values = [user_id]
-
-        # -------------------------
-        # SEARCH
-        # -------------------------
-
-        if search:
-
-            query += """
-                AND filename ILIKE %s
-            """
-
-            values.append(
-                "%" + search + "%"
-            )
-
-        # -------------------------
-        # FILE TYPE FILTER
-        # -------------------------
-
-        if file_type:
-
-            query += """
-                AND file_type = %s
-            """
-
-            values.append(file_type)
-
-        query += """
-            ORDER BY uploaded_at DESC
-        """
-
-        cursor.execute(
-            query,
-            tuple(values)
-        )
-
-        rows = cursor.fetchall()
-
-        files = []
-
-        for row in rows:
-
-            files.append({
-                "id": row[0],
-                "name": row[1],
-                "s3_key": row[2],
-                "type": row[3],
-                "size": row[4],
-                "uploaded_at": row[5],
-                "icon": FILE_ICONS.get(
-                    row[3],
-                    "📁"
-                )
-            })
-
-        return files
-
-    except Exception as error:
-
-        print(
-            "Error getting files:",
-            error
-        )
-
-        return []
-
-    finally:
-
-        if cursor:
-            cursor.close()
-
-        if connection:
-            connection.close()
+    return redirect(url_for("login"))
 
 
 # ============================================================
@@ -344,130 +207,86 @@ def register():
 
     if request.method == "POST":
 
-        name = request.form.get(
-            "name",
-            ""
-        ).strip()
-
-        email = request.form.get(
-            "email",
-            ""
-        ).strip().lower()
-
-        password = request.form.get(
-            "password",
-            ""
-        )
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
 
         if not name or not email or not password:
 
             flash(
-                "Please fill all fields.",
+                "Please fill in all fields.",
                 "danger"
             )
 
-            return redirect(
-                url_for("register")
-            )
+            return redirect(url_for("register"))
 
-        connection = None
+        hashed_password = generate_password_hash(password)
+
+        conn = None
         cursor = None
 
         try:
 
-            connection = get_db_connection()
-            cursor = connection.cursor()
-
-            # Check if email already exists
-
-            cursor.execute(
-                """
-                SELECT id
-                FROM users
-                WHERE email = %s
-                """,
-                (email,)
-            )
-
-            existing_user = cursor.fetchone()
-
-            if existing_user:
-
-                flash(
-                    "Email already registered. Please login.",
-                    "warning"
-                )
-
-                return redirect(
-                    url_for("login")
-                )
-
-            # Hash password
-
-            password_hash = generate_password_hash(
-                password
-            )
-
-            # Insert user
+            conn = get_db_connection()
+            cursor = conn.cursor()
 
             cursor.execute(
                 """
                 INSERT INTO users
-                (
-                    name,
-                    email,
-                    password_hash
-                )
+                (name, email, password)
                 VALUES (%s, %s, %s)
                 """,
                 (
                     name,
                     email,
-                    password_hash
+                    hashed_password
                 )
             )
 
-            connection.commit()
+            conn.commit()
 
             flash(
                 "Registration successful. Please login.",
                 "success"
             )
 
-            return redirect(
-                url_for("login")
+            return redirect(url_for("login"))
+
+        except IntegrityError:
+
+            if conn:
+                conn.rollback()
+
+            flash(
+                "An account with this email already exists.",
+                "danger"
             )
 
-        except Exception as error:
+            return redirect(url_for("register"))
 
-            if connection:
-                connection.rollback()
+        except Exception as e:
 
-            print(
-                "Registration error:",
-                error
-            )
+            if conn:
+                conn.rollback()
+
+            print("Register error:", e)
 
             flash(
                 "Registration failed. Please try again.",
                 "danger"
             )
 
-            return redirect(
-                url_for("register")
-            )
+            return redirect(url_for("register"))
 
         finally:
 
             if cursor:
                 cursor.close()
 
-            if connection:
-                connection.close()
+            if conn:
+                conn.close()
 
-    return render_template(
-        "register.html"
-    )
+    return render_template("register.html")
 
 
 # ============================================================
@@ -476,6 +295,10 @@ def register():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+
+    if "user_id" in session:
+
+        return redirect(url_for("dashboard"))
 
     if request.method == "POST":
 
@@ -489,32 +312,17 @@ def login():
             ""
         )
 
-        if not email or not password:
-
-            flash(
-                "Please enter email and password.",
-                "danger"
-            )
-
-            return redirect(
-                url_for("login")
-            )
-
-        connection = None
+        conn = None
         cursor = None
 
         try:
 
-            connection = get_db_connection()
-            cursor = connection.cursor()
+            conn = get_db_connection()
+            cursor = conn.cursor()
 
             cursor.execute(
                 """
-                SELECT
-                    id,
-                    name,
-                    email,
-                    password_hash
+                SELECT id, name, email, password
                 FROM users
                 WHERE email = %s
                 """,
@@ -523,23 +331,28 @@ def login():
 
             user = cursor.fetchone()
 
-            if user and check_password_hash(
-                user[3],
-                password
-            ):
+            if user:
 
-                session["user_id"] = user[0]
-                session["user_name"] = user[1]
-                session["user_email"] = user[2]
+                user_id = user[0]
+                user_name = user[1]
+                stored_password = user[3]
 
-                flash(
-                    "Login successful.",
-                    "success"
-                )
+                if check_password_hash(
+                    stored_password,
+                    password
+                ):
 
-                return redirect(
-                    url_for("dashboard")
-                )
+                    session["user_id"] = user_id
+                    session["user_name"] = user_name
+
+                    flash(
+                        "Login successful.",
+                        "success"
+                    )
+
+                    return redirect(
+                        url_for("dashboard")
+                    )
 
             flash(
                 "Invalid email or password.",
@@ -550,15 +363,12 @@ def login():
                 url_for("login")
             )
 
-        except Exception as error:
+        except Exception as e:
 
-            print(
-                "Login error:",
-                error
-            )
+            print("Login error:", e)
 
             flash(
-                "Unable to login. Please try again.",
+                "Unable to login right now.",
                 "danger"
             )
 
@@ -571,12 +381,10 @@ def login():
             if cursor:
                 cursor.close()
 
-            if connection:
-                connection.close()
+            if conn:
+                conn.close()
 
-    return render_template(
-        "login.html"
-    )
+    return render_template("login.html")
 
 
 # ============================================================
@@ -593,61 +401,168 @@ def logout():
         "success"
     )
 
-    return redirect(
-        url_for("login")
-    )
+    return redirect(url_for("login"))
 
 
 # ============================================================
 # DASHBOARD
 # ============================================================
 
-@app.route("/")
 @app.route("/dashboard")
-@login_required
 def dashboard():
+
+    if "user_id" not in session:
+
+        return redirect(url_for("login"))
+
+    user_id = session["user_id"]
+    user_name = session.get(
+        "user_name",
+        "User"
+    )
 
     search = request.args.get(
         "search",
         ""
     ).strip()
 
-    file_type = request.args.get(
+    selected_type = request.args.get(
         "file_type",
         ""
     ).strip().lower()
 
-    files = get_user_files(
-        session["user_id"],
-        search,
-        file_type
-    )
+    conn = None
+    cursor = None
 
-    total_files = len(files)
+    files = []
 
-    storage_used = sum(
-        file["size"] or 0
-        for file in files
-    )
+    total_files = 0
+    storage_used = 0
 
-    # Convert bytes to MB
+    try:
 
-    storage_used_mb = round(
-        storage_used / (1024 * 1024),
-        2
-    )
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        query = """
+            SELECT
+                id,
+                name,
+                s3_key,
+                file_type,
+                file_size,
+                uploaded_at
+            FROM files
+            WHERE user_id = %s
+        """
+
+        params = [user_id]
+
+        # SEARCH
+        if search:
+
+            query += """
+                AND LOWER(name)
+                LIKE LOWER(%s)
+            """
+
+            params.append(
+                f"%{search}%"
+            )
+
+        # FILTER
+        if selected_type:
+
+            query += """
+                AND LOWER(file_type) = %s
+            """
+
+            params.append(
+                selected_type
+            )
+
+        query += """
+            ORDER BY uploaded_at DESC
+        """
+
+        cursor.execute(
+            query,
+            params
+        )
+
+        rows = cursor.fetchall()
+
+        for row in rows:
+
+            files.append({
+                "id": row[0],
+                "name": row[1],
+                "s3_key": row[2],
+                "type": row[3],
+                "size": row[4],
+                "uploaded_at": row[5].strftime(
+                    "%d %b %Y, %I:%M %p"
+                ),
+                "icon": get_file_icon(row[3])
+            })
+
+        # TOTAL FILES
+        cursor.execute(
+            """
+            SELECT COUNT(*)
+            FROM files
+            WHERE user_id = %s
+            """,
+            (user_id,)
+        )
+
+        total_files = cursor.fetchone()[0]
+
+        # TOTAL STORAGE
+        cursor.execute(
+            """
+            SELECT COALESCE(
+                SUM(file_size),
+                0
+            )
+            FROM files
+            WHERE user_id = %s
+            """,
+            (user_id,)
+        )
+
+        total_bytes = cursor.fetchone()[0]
+
+        storage_used = round(
+            total_bytes / 1024 / 1024,
+            2
+        )
+
+    except Exception as e:
+
+        print("Dashboard error:", e)
+
+        flash(
+            "Unable to load stored files.",
+            "danger"
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
 
     return render_template(
         "index.html",
-        user_name=session.get(
-            "user_name",
-            "User"
-        ),
+        user_name=user_name,
         files=files,
         total_files=total_files,
-        storage_used=storage_used_mb,
+        storage_used=storage_used,
         search=search,
-        selected_type=file_type
+        selected_type=selected_type
     )
 
 
@@ -659,8 +574,13 @@ def dashboard():
     "/upload",
     methods=["POST"]
 )
-@login_required
 def upload_file():
+
+    if "user_id" not in session:
+
+        return redirect(
+            url_for("login")
+        )
 
     if "file" not in request.files:
 
@@ -675,10 +595,10 @@ def upload_file():
 
     file = request.files["file"]
 
-    if file.filename == "":
+    if not file or file.filename == "":
 
         flash(
-            "No file selected.",
+            "Please select a file.",
             "danger"
         )
 
@@ -686,22 +606,7 @@ def upload_file():
             url_for("dashboard")
         )
 
-    filename = secure_filename(
-        file.filename
-    )
-
-    if not filename:
-
-        flash(
-            "Invalid filename.",
-            "danger"
-        )
-
-        return redirect(
-            url_for("dashboard")
-        )
-
-    # Check extension
+    filename = file.filename
 
     if not allowed_file(filename):
 
@@ -714,13 +619,10 @@ def upload_file():
             url_for("dashboard")
         )
 
-    # Read file
-
-    file_data = file.read()
-
-    file_size = len(file_data)
-
-    # Check size
+    # Check file size
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()
+    file.seek(0)
 
     if file_size > MAX_FILE_SIZE:
 
@@ -733,103 +635,111 @@ def upload_file():
             url_for("dashboard")
         )
 
-    # Get extension
-
-    file_type = filename.rsplit(
+    extension = filename.rsplit(
         ".",
         1
     )[1].lower()
 
-    # Generate unique S3 key
+    user_id = session["user_id"]
 
-    unique_name = (
-        str(uuid.uuid4())
-        + "_"
-        + filename
+    # Unique S3 key
+    timestamp = datetime.now().strftime(
+        "%Y%m%d%H%M%S%f"
     )
 
     s3_key = (
-        "users/"
-        + str(session["user_id"])
-        + "/"
-        + unique_name
+        f"user_{user_id}/"
+        f"{timestamp}_{filename}"
     )
+
+    conn = None
+    cursor = None
 
     try:
 
-        # -------------------------
         # Upload to S3
-        # -------------------------
-
         s3 = get_s3_client()
 
         s3.upload_fileobj(
-            BytesIO(file_data),
+            file,
             AWS_BUCKET_NAME,
             s3_key
         )
 
-        # -------------------------
-        # Save metadata in RDS
-        # -------------------------
-
-        connection = get_db_connection()
-        cursor = connection.cursor()
+        # Save metadata in PostgreSQL
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
         cursor.execute(
             """
             INSERT INTO files
             (
                 user_id,
-                filename,
+                name,
                 s3_key,
                 file_type,
                 file_size
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES
+            (%s, %s, %s, %s, %s)
             """,
             (
-                session["user_id"],
+                user_id,
                 filename,
                 s3_key,
-                file_type,
+                extension,
                 file_size
             )
         )
 
-        connection.commit()
-
-        cursor.close()
-        connection.close()
+        conn.commit()
 
         flash(
-            "File uploaded successfully.",
+            f"{filename} uploaded successfully.",
             "success"
         )
 
-    except (BotoCoreError, ClientError) as error:
+    except NoCredentialsError:
 
-        print(
-            "S3 upload error:",
-            error
-        )
+        if conn:
+            conn.rollback()
 
         flash(
-            "File upload to cloud storage failed.",
+            "AWS credentials or IAM role are not available.",
             "danger"
         )
 
-    except Exception as error:
+    except ClientError as e:
 
-        print(
-            "Upload error:",
-            error
-        )
+        if conn:
+            conn.rollback()
+
+        print("S3 error:", e)
 
         flash(
-            "File upload failed.",
+            "Unable to upload file to S3.",
             "danger"
         )
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Upload error:", e)
+
+        flash(
+            "Upload failed. Please try again.",
+            "danger"
+        )
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
 
     return redirect(
         url_for("dashboard")
@@ -843,21 +753,28 @@ def upload_file():
 @app.route(
     "/download/<int:file_id>"
 )
-@login_required
 def download_file(file_id):
 
-    connection = None
+    if "user_id" not in session:
+
+        return redirect(
+            url_for("login")
+        )
+
+    user_id = session["user_id"]
+
+    conn = None
     cursor = None
 
     try:
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
         cursor.execute(
             """
             SELECT
-                filename,
+                name,
                 s3_key
             FROM files
             WHERE id = %s
@@ -865,13 +782,13 @@ def download_file(file_id):
             """,
             (
                 file_id,
-                session["user_id"]
+                user_id
             )
         )
 
-        file_record = cursor.fetchone()
+        result = cursor.fetchone()
 
-        if not file_record:
+        if not result:
 
             flash(
                 "File not found.",
@@ -882,10 +799,8 @@ def download_file(file_id):
                 url_for("dashboard")
             )
 
-        filename = file_record[0]
-        s3_key = file_record[1]
-
-        # Get object from S3
+        filename = result[0]
+        s3_key = result[1]
 
         s3 = get_s3_client()
 
@@ -897,20 +812,17 @@ def download_file(file_id):
         file_data = response["Body"].read()
 
         return send_file(
-            BytesIO(file_data),
+            io.BytesIO(file_data),
             as_attachment=True,
             download_name=filename
         )
 
-    except Exception as error:
+    except Exception as e:
 
-        print(
-            "Download error:",
-            error
-        )
+        print("Download error:", e)
 
         flash(
-            "Unable to download file.",
+            "Unable to download the file.",
             "danger"
         )
 
@@ -923,8 +835,8 @@ def download_file(file_id):
         if cursor:
             cursor.close()
 
-        if connection:
-            connection.close()
+        if conn:
+            conn.close()
 
 
 # ============================================================
@@ -935,23 +847,28 @@ def download_file(file_id):
     "/delete/<int:file_id>",
     methods=["POST"]
 )
-@login_required
 def delete_file(file_id):
 
-    connection = None
+    if "user_id" not in session:
+
+        return redirect(
+            url_for("login")
+        )
+
+    user_id = session["user_id"]
+
+    conn = None
     cursor = None
 
     try:
 
-        connection = get_db_connection()
-        cursor = connection.cursor()
-
-        # Get file information
+        conn = get_db_connection()
+        cursor = conn.cursor()
 
         cursor.execute(
             """
             SELECT
-                filename,
+                name,
                 s3_key
             FROM files
             WHERE id = %s
@@ -959,13 +876,13 @@ def delete_file(file_id):
             """,
             (
                 file_id,
-                session["user_id"]
+                user_id
             )
         )
 
-        file_record = cursor.fetchone()
+        result = cursor.fetchone()
 
-        if not file_record:
+        if not result:
 
             flash(
                 "File not found.",
@@ -976,11 +893,10 @@ def delete_file(file_id):
                 url_for("dashboard")
             )
 
-        filename = file_record[0]
-        s3_key = file_record[1]
+        filename = result[0]
+        s3_key = result[1]
 
         # Delete from S3
-
         s3 = get_s3_client()
 
         s3.delete_object(
@@ -988,8 +904,7 @@ def delete_file(file_id):
             Key=s3_key
         )
 
-        # Delete metadata from database
-
+        # Delete database record
         cursor.execute(
             """
             DELETE FROM files
@@ -998,29 +913,26 @@ def delete_file(file_id):
             """,
             (
                 file_id,
-                session["user_id"]
+                user_id
             )
         )
 
-        connection.commit()
+        conn.commit()
 
         flash(
             f"{filename} deleted successfully.",
             "success"
         )
 
-    except Exception as error:
+    except Exception as e:
 
-        if connection:
-            connection.rollback()
+        if conn:
+            conn.rollback()
 
-        print(
-            "Delete error:",
-            error
-        )
+        print("Delete error:", e)
 
         flash(
-            "Unable to delete file.",
+            "Unable to delete the file.",
             "danger"
         )
 
@@ -1029,8 +941,8 @@ def delete_file(file_id):
         if cursor:
             cursor.close()
 
-        if connection:
-            connection.close()
+        if conn:
+            conn.close()
 
     return redirect(
         url_for("dashboard")
@@ -1038,7 +950,7 @@ def delete_file(file_id):
 
 
 # ============================================================
-# DASHBOARD UI PREVIEW
+# DASHBOARD PREVIEW
 # ============================================================
 
 @app.route("/preview")
@@ -1083,12 +995,13 @@ def dashboard_preview():
 
 
 # ============================================================
-# APPLICATION START
+# RUN
 # ============================================================
 
 if __name__ == "__main__":
 
-    create_tables()
+    # Do not initialize RDS when testing locally
+    # because your RDS is private.
 
     app.run(
         host="0.0.0.0",
