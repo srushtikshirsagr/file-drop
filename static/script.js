@@ -3,10 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const fileInput = document.getElementById("fileInput");
     const uploadBox = document.getElementById("uploadBox");
     const fileNamePreview = document.getElementById("fileNamePreview");
-
-    if (!fileInput || !uploadBox) {
-        return;
-    }
+    const uploadForm = document.getElementById("uploadForm");
 
     const maxSize = 2 * 1024 * 1024;
 
@@ -20,6 +17,11 @@ document.addEventListener("DOMContentLoaded", function () {
         "pptx"
     ];
 
+
+    /* =====================================================
+       FILE SELECTION
+       ===================================================== */
+
     function showFile(file) {
 
         if (!file) {
@@ -27,108 +29,301 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const fileName = file.name;
+
         const extension = fileName
             .split(".")
             .pop()
             .toLowerCase();
 
-        // Check file type
+
+        // File type validation
         if (!allowedExtensions.includes(extension)) {
 
-            alert(
-                "File type not supported.\n\n" +
-                "Allowed: JPG, JPEG, PNG, PDF, MP4, PPT, PPTX"
+            showTemporaryMessage(
+                "File type not supported. Allowed: JPG, JPEG, PNG, PDF, MP4, PPT, PPTX",
+                "danger"
             );
 
             fileInput.value = "";
 
             if (fileNamePreview) {
-                fileNamePreview.textContent = "";
+                fileNamePreview.textContent = "No file selected";
             }
 
             return;
         }
 
-        // Check file size
+
+        // File size validation
         if (file.size > maxSize) {
 
-            alert("File size must be less than 2 MB.");
+            showTemporaryMessage(
+                "File size must be less than 2 MB.",
+                "danger"
+            );
 
             fileInput.value = "";
 
             if (fileNamePreview) {
-                fileNamePreview.textContent = "";
+                fileNamePreview.textContent = "No file selected";
             }
 
             return;
         }
 
-        // Show selected file
+
+        // Display selected file
         if (fileNamePreview) {
+
+            const sizeMB =
+                (file.size / 1024 / 1024).toFixed(2);
+
             fileNamePreview.textContent =
-                "Selected: " + fileName;
+                "✓ " + fileName + " • " + sizeMB + " MB";
         }
     }
 
-    // File selected normally
-    fileInput.addEventListener("change", function () {
 
-        const file = this.files[0];
+    /* =====================================================
+       NORMAL FILE SELECTION
+       ===================================================== */
 
-        showFile(file);
-    });
+    if (fileInput) {
 
-    // Open file selector when clicking upload area
-    uploadBox.addEventListener("click", function (event) {
+        fileInput.addEventListener("change", function () {
 
-        if (
-            event.target.tagName !== "INPUT" &&
-            !event.target.closest(".file-select-btn")
-        ) {
-            fileInput.click();
-        }
-    });
+            const file = this.files[0];
 
-    // Drag over
-    uploadBox.addEventListener("dragover", function (event) {
+            showFile(file);
+        });
+    }
 
-        event.preventDefault();
 
-        uploadBox.classList.add("dragover");
-    });
+    /* =====================================================
+       DRAG AND DROP
+       ===================================================== */
 
-    // Drag leave
-    uploadBox.addEventListener("dragleave", function () {
+    if (uploadBox) {
 
-        uploadBox.classList.remove("dragover");
-    });
+        uploadBox.addEventListener("dragover", function (event) {
 
-    // File dropped
-    uploadBox.addEventListener("drop", function (event) {
+            event.preventDefault();
 
-        event.preventDefault();
+            uploadBox.classList.add("dragover");
+        });
 
-        uploadBox.classList.remove("dragover");
 
-        const files = event.dataTransfer.files;
+        uploadBox.addEventListener("dragleave", function () {
 
-        if (files.length > 0) {
+            uploadBox.classList.remove("dragover");
+        });
+
+
+        uploadBox.addEventListener("drop", function (event) {
+
+            event.preventDefault();
+
+            uploadBox.classList.remove("dragover");
+
+            const files = event.dataTransfer.files;
+
+            if (files.length === 0) {
+                return;
+            }
 
             const file = files[0];
 
             try {
-                const dataTransfer = new DataTransfer();
+
+                const dataTransfer =
+                    new DataTransfer();
 
                 dataTransfer.items.add(file);
 
-                fileInput.files = dataTransfer.files;
+                fileInput.files =
+                    dataTransfer.files;
 
             } catch (error) {
-                console.log("Could not assign dropped file.");
+
+                console.log(
+                    "Could not assign dropped file."
+                );
             }
 
             showFile(file);
-        }
+        });
+    }
+
+
+    /* =====================================================
+       IMPORTANT:
+       DO NOT MAKE THE WHOLE UPLOAD BOX CLICKABLE
+       ===================================================== */
+
+    // There is intentionally NO uploadBox.click()
+    // handler here.
+
+    // The browser file picker opens ONLY when the user
+    // presses "Choose File".
+
+
+
+    /* =====================================================
+       PREVENT DOUBLE SUBMISSION
+       ===================================================== */
+
+    if (uploadForm) {
+
+        uploadForm.addEventListener("submit", function (event) {
+
+            if (!fileInput || !fileInput.files.length) {
+
+                event.preventDefault();
+
+                showTemporaryMessage(
+                    "Please select a file first.",
+                    "danger"
+                );
+
+                return;
+            }
+
+
+            const uploadButton =
+                document.getElementById("uploadButton");
+
+
+            if (uploadButton) {
+
+                uploadButton.disabled = true;
+
+                uploadButton.innerHTML =
+                    "⏳ Uploading...";
+            }
+
+        });
+    }
+
+
+
+    /* =====================================================
+       FLASH MESSAGE AUTO HIDE
+       ===================================================== */
+
+    const flashMessages =
+        document.querySelectorAll(".flash-message");
+
+
+    flashMessages.forEach(function (message) {
+
+        setTimeout(function () {
+
+            message.classList.add("message-hide");
+
+            setTimeout(function () {
+
+                message.remove();
+
+            }, 400);
+
+        }, 3000);
+
     });
+
+
+
+    /* =====================================================
+       TEMPORARY FRONTEND MESSAGE
+       ===================================================== */
+
+    function showTemporaryMessage(text, type) {
+
+        let container =
+            document.querySelector(".flash-container");
+
+
+        if (!container) {
+
+            container =
+                document.createElement("div");
+
+            container.className =
+                "flash-container";
+
+            document.body.appendChild(container);
+        }
+
+
+        const message =
+            document.createElement("div");
+
+        message.className =
+            "flash-message " + type;
+
+        message.textContent =
+            text;
+
+
+        container.appendChild(message);
+
+
+        setTimeout(function () {
+
+            message.classList.add("message-hide");
+
+            setTimeout(function () {
+
+                message.remove();
+
+            }, 400);
+
+        }, 3000);
+    }
+
+
+
+    /* =====================================================
+       PRESERVE SCROLL POSITION AFTER FILTER
+       ===================================================== */
+
+    const filterForm =
+        document.querySelector(".search-bar");
+
+
+    if (filterForm) {
+
+        filterForm.addEventListener("submit", function () {
+
+            sessionStorage.setItem(
+                "cloudDropperScrollPosition",
+                window.scrollY
+            );
+
+        });
+    }
+
+
+    const savedScrollPosition =
+        sessionStorage.getItem(
+            "cloudDropperScrollPosition"
+        );
+
+
+    if (savedScrollPosition !== null) {
+
+        sessionStorage.removeItem(
+            "cloudDropperScrollPosition"
+        );
+
+
+        window.requestAnimationFrame(function () {
+
+            window.scrollTo(
+                0,
+                parseInt(savedScrollPosition, 10)
+            );
+
+        });
+    }
 
 });

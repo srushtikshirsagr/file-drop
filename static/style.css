@@ -1356,3 +1356,401 @@ body {
     }
 
 }
+/* =========================================================
+   CLOUDDROPPER DASHBOARD - NEW UPLOAD DESIGN
+   ========================================================= */
+
+.brand-name {
+    font-size: 1.35rem;
+    font-weight: 850;
+    letter-spacing: -0.035em;
+    color: #111827;
+}
+
+.brand-subtitle {
+    display: none;
+}
+
+/* Upload section */
+
+.modern-upload {
+    position: relative;
+    overflow: hidden;
+}
+
+.section-kicker {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #6366f1;
+}
+
+.modern-upload .upload-heading {
+    margin-bottom: 20px;
+}
+
+.modern-upload .upload-heading h2 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+.upload-limit {
+    border: 1px solid #c7d2fe;
+    background: #eef2ff;
+    color: #4f46e5;
+    padding: 7px 13px;
+    border-radius: 999px;
+}
+
+/* File type chips */
+
+.modern-file-types {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+    padding: 13px 15px;
+    border: 1px solid #e8eaf5;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fafaff, #f8fafc);
+}
+
+.supported-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 750;
+    color: #334155;
+}
+
+.type-icon {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    border-radius: 8px;
+    background: #eef2ff;
+    color: #4f46e5;
+    font-weight: 900;
+}
+
+.supported-types {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.type-chip {
+    padding: 5px 9px;
+    border-radius: 7px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.type-chip.image {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.type-chip.document {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
+.type-chip.video {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.type-chip.presentation {
+    background: #faf5ff;
+    color: #7e22ce;
+}
+
+/* Upload box */
+
+.modern-upload-box {
+    min-height: 265px;
+    padding: 32px 25px;
+    border: 2px dashed #c7d2fe;
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.08), transparent 30%),
+        linear-gradient(145deg, #fafaff, #f8fafc);
+    cursor: default;
+}
+
+.modern-upload-box:hover {
+    border-color: #818cf8;
+    background:
+        radial-gradient(circle at top right, rgba(99,102,241,0.12), transparent 30%),
+        linear-gradient(145deg, #f8f8ff, #f8fafc);
+}
+
+.upload-icon-circle {
+    width: 58px;
+    height: 58px;
+    display: grid;
+    place-items: center;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    font-size: 27px;
+    box-shadow: 0 10px 25px rgba(79,70,229,0.22);
+}
+
+.upload-main-text h3 {
+    margin-top: 4px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.upload-main-text p {
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+/* Choose file button */
+
+.browse-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 7px;
+    padding: 9px 18px;
+    border-radius: 9px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.browse-button:hover {
+    border-color: #6366f1;
+    color: #4f46e5;
+    background: #eef2ff;
+}
+
+/* Selected file */
+
+.file-name-preview {
+    min-height: 20px;
+    margin-top: 7px;
+    padding: 5px 12px;
+    color: #4f46e5;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+/* Upload button */
+
+.modern-upload-box .upload-button {
+    margin-top: 5px;
+    min-width: 180px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #4f46e5, #6366f1);
+    box-shadow: 0 8px 18px rgba(79,70,229,0.22);
+}
+
+.modern-upload-box .upload-button:hover {
+    background: linear-gradient(135deg, #4338ca, #4f46e5);
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   FILE ACTIONS
+   ========================================================= */
+
+.file-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.download-btn,
+.delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 82px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.download-btn {
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #c7d2fe;
+}
+
+.download-btn:hover {
+    background: #e0e7ff;
+    transform: translateY(-1px);
+}
+
+.delete-btn {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+}
+
+.delete-btn:hover {
+    background: #ffe4e6;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+.logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    border-radius: 9px;
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-weight: 750;
+    transition: 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: #ffe4e6;
+    color: #be123c;
+    transform: translateY(-1px);
+}
+
+/* =========================================================
+   FLASH MESSAGES
+   ========================================================= */
+
+.flash-container {
+    position: fixed;
+    top: 88px;
+    right: 24px;
+    z-index: 9999;
+    width: min(390px, calc(100vw - 32px));
+}
+
+.flash-message {
+    padding: 13px 16px;
+    margin-bottom: 9px;
+    border-radius: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 12px 30px rgba(15,23,42,0.12);
+    font-size: 0.82rem;
+    font-weight: 650;
+    animation: messageIn 0.25s ease;
+}
+
+.flash-message.success {
+    color: #047857;
+    border-left: 4px solid #10b981;
+}
+
+.flash-message.danger,
+.flash-message.error {
+    color: #be123c;
+    border-left: 4px solid #f43f5e;
+}
+
+@keyframes messageIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.flash-message.message-hide {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: 0.35s ease;
+}
+
+/* =========================================================
+   FILTER AREA
+   ========================================================= */
+
+.search-bar select {
+    height: 40px;
+    padding: 0 35px 0 12px;
+    border: 1px solid #dbe1ea;
+    border-radius: 9px;
+    background: white;
+    color: #334155;
+    font-size: 0.82rem;
+    font-weight: 650;
+    cursor: pointer;
+    outline: none;
+}
+
+.search-bar select:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+
+.search-bar button {
+    height: 40px;
+    padding: 0 18px;
+    border: none;
+    border-radius: 9px;
+    background: #4f46e5;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.search-bar button:hover {
+    background: #4338ca;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .modern-file-types {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .supported-types {
+        justify-content: flex-start;
+    }
+
+    .flash-container {
+        top: 78px;
+        right: 16px;
+    }
+
+}
