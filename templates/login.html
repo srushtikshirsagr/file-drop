@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>CloudDropper | Login</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body class="auth-page">
+
+
+<div class="auth-container">
+
+
+    <div class="auth-card">
+
+
+        <!-- LOGO -->
+
+        <div class="auth-brand">
+
+            <div class="auth-logo">
+                ☁
+            </div>
+
+            <span>
+                CloudDropper
+            </span>
+
+        </div>
+
+
+        <!-- HEADING -->
+
+        <div class="auth-heading">
+
+            <h1>
+                Welcome back
+            </h1>
+
+            <p>
+                Sign in to manage your files
+            </p>
+
+        </div>
+
+
+        <!-- FLASH MESSAGE -->
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div class="auth-message {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <!-- LOGIN FORM -->
+
+        <form method="POST"
+              action="{{ url_for('login') }}">
+
+
+            <div class="auth-field">
+
+                <label for="email">
+                    Email address
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                    required
+                >
+
+            </div>
+
+
+            <div class="auth-field">
+
+                <div class="password-label">
+
+                    <label for="loginPassword">
+                        Password
+                    </label>
+
+                </div>
+
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    name="password"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                    required
+                >
+
+
+                <label class="show-password">
+
+                    <input
+                        type="checkbox"
+                        onclick="togglePassword('loginPassword')"
+                    >
+
+                    <span>
+                        Show password
+                    </span>
+
+                </label>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="auth-button">
+
+                Login
+
+            </button>
+
+
+        </form>
+
+
+        <!-- REGISTER LINK -->
+
+        <div class="auth-switch">
+
+            Don't have an account?
+
+            <a href="{{ url_for('register') }}">
+                Create account
+            </a>
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+function togglePassword(id) {
+
+    const password =
+        document.getElementById(id);
+
+    password.type =
+        password.type === "password"
+            ? "text"
+            : "password";
+}
+
+</script>
+
+
+</body>
+
+</html>
