@@ -164,7 +164,7 @@ def login():
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT id, name, password_hash FROM users WHERE email = %s",
+                    "SELECT id, name, password_hash, role FROM users WHERE email = %s",
                     (email,),
                 )
                 user = cur.fetchone()
@@ -178,7 +178,13 @@ def login():
         session.clear()
         session["user_id"] = user[0]
         session["user_name"] = user[1]
+        session["role"] = user[3]
 
+        # Send admin to Admin Dashboard
+        if user[3] == "admin":
+            return redirect(url_for("admin_dashboard"))
+
+        # Normal users continue to existing dashboard
         return redirect(url_for("dashboard"))
 
     return render_template("login.html")
@@ -188,6 +194,61 @@ def login():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+@app.route("/admin")
+def admin_dashboard():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+
+    try:
+        with conn.cursor() as cur:
+            # Total users
+            cur.execute("SELECT COUNT(*) FROM users")
+            total_users = cur.fetchone()[0]
+
+            # Total files
+            cur.execute("SELECT COUNT(*) FROM files")
+            total_files = cur.fetchone()[0]
+
+            # Total storage
+            cur.execute("SELECT COALESCE(SUM(file_size), 0) FROM files")
+            total_storage = cur.fetchone()[0]
+
+            # Registered users
+            cur.execute("""
+                SELECT id, name, email, role, created_at
+                FROM users
+                ORDER BY created_at DESC
+            """)
+            users = cur.fetchall()
+
+            # All uploaded files
+            cur.execute("""
+                SELECT files.id, files.original_name, files.file_type,
+                       files.file_size, files.uploaded_at, users.name
+                FROM files
+                JOIN users ON files.user_id = users.id
+                ORDER BY files.uploaded_at DESC
+            """)
+            files = cur.fetchall()
+
+    finally:
+        conn.close()
+
+    return render_template(
+        "admin.html",
+        total_users=total_users,
+        total_files=total_files,
+        total_storage=total_storage,
+        users=users,
+        files=files,
+    )
 
 
 @app.route("/dashboard")

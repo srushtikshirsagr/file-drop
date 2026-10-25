@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CloudDropper Admin Dashboard</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="admin-page">
+
+    <nav class="admin-navbar">
+        <div class="admin-brand">
+            <span class="admin-cloud-icon">☁</span>
+            <span>CloudDropper</span>
+        </div>
+
+        <div class="admin-nav-right">
+            <span class="admin-badge">👑 Admin</span>
+            <a href="{{ url_for('logout') }}" class="admin-logout">
+                Logout
+            </a>
+        </div>
+    </nav>
+
+
+    <main class="admin-container">
+
+        <div class="admin-heading">
+            <div>
+                <span class="admin-kicker">ADMIN PANEL</span>
+                <h1>Admin Dashboard</h1>
+                <p>Manage users, files and cloud storage.</p>
+            </div>
+        </div>
+
+
+        <!-- STAT CARDS -->
+        <section class="admin-stats">
+
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon users-icon">👥</div>
+                <div>
+                    <span>Total Users</span>
+                    <strong>{{ total_users }}</strong>
+                </div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon files-icon">📁</div>
+                <div>
+                    <span>Total Files</span>
+                    <strong>{{ total_files }}</strong>
+                </div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon storage-icon">💾</div>
+                <div>
+                    <span>Total Storage</span>
+                    <strong>
+                        {{ "%.2f"|format(total_storage / 1024 / 1024) }} MB
+                    </strong>
+                </div>
+            </div>
+
+            <div class="admin-stat-card">
+                <div class="admin-stat-icon status-icon">🟢</div>
+                <div>
+                    <span>System Status</span>
+                    <strong>Active</strong>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- USERS -->
+        <section class="admin-section">
+
+            <div class="admin-section-header">
+                <div>
+                    <span class="admin-section-kicker">USER MANAGEMENT</span>
+                    <h2>Registered Users</h2>
+                </div>
+
+                <span class="admin-count">
+                    {{ total_users }} Users
+                </span>
+            </div>
+
+
+            <div class="admin-table-wrapper">
+
+                <table class="admin-table">
+
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for user in users %}
+
+                        <tr>
+
+                            <td>
+                                <strong>{{ user[1] }}</strong>
+                            </td>
+
+                            <td>{{ user[2] }}</td>
+
+                            <td>
+                                {% if user[3] == "admin" %}
+                                    <span class="role-badge admin-role">
+                                        👑 ADMIN
+                                    </span>
+                                {% else %}
+                                    <span class="role-badge user-role">
+                                        USER
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ user[4].strftime("%d %b %Y") }}
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="4" class="empty-table">
+                                No users found.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- FILES -->
+        <section class="admin-section">
+
+            <div class="admin-section-header">
+                <div>
+                    <span class="admin-section-kicker">FILE MANAGEMENT</span>
+                    <h2>All Uploaded Files</h2>
+                </div>
+
+                <span class="admin-count">
+                    {{ total_files }} Files
+                </span>
+            </div>
+
+
+            <div class="admin-table-wrapper">
+
+                <table class="admin-table">
+
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>User</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for file in files %}
+
+                        <tr>
+
+                            <td>
+                                <strong>{{ file[1] }}</strong>
+                            </td>
+
+                            <td>{{ file[5] }}</td>
+
+                            <td>
+                                <span class="file-type-badge">
+                                    {{ file[2]|upper }}
+                                </span>
+                            </td>
+
+                            <td>
+                                {{ "%.2f"|format(file[3] / 1024 / 1024) }} MB
+                            </td>
+
+                            <td>
+                                {{ file[4].strftime("%d %b %Y") }}
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="5" class="empty-table">
+                                No uploaded files found.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+</html>
