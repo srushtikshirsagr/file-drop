@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>CloudDropper Admin Dashboard</title>
 
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
 <body class="admin-page">
@@ -120,13 +120,13 @@
 
                             <td>
                                 {% if user[3] == "admin" %}
-                                    <span class="role-badge admin-role">
-                                        👑 ADMIN
-                                    </span>
+                                <span class="role-badge admin-role">
+                                    👑 ADMIN
+                                </span>
                                 {% else %}
-                                    <span class="role-badge user-role">
-                                        USER
-                                    </span>
+                                <span class="role-badge user-role">
+                                    USER
+                                </span>
                                 {% endif %}
                             </td>
 
@@ -176,11 +176,12 @@
 
                     <thead>
                         <tr>
-                            <th>File</th>
-                            <th>User</th>
-                            <th>Type</th>
-                            <th>Size</th>
-                            <th>Uploaded</th>
+                            <<th>File</th>
+                                <th>User</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Uploaded</th>
+                                <th>Action</th>
                         </tr>
                     </thead>
 
@@ -191,24 +192,16 @@
                         <tr>
 
                             <td>
-                                <strong>{{ file[1] }}</strong>
-                            </td>
-
-                            <td>{{ file[5] }}</td>
-
-                            <td>
-                                <span class="file-type-badge">
-                                    {{ file[2]|upper }}
-                                </span>
-                            </td>
-
-                            <td>
-                                {{ "%.2f"|format(file[3] / 1024 / 1024) }} MB
-                            </td>
-
-                            <td>
-                                {{ file[4].strftime("%d %b %Y") }}
-                            </td>
+    <form
+        action="{{ url_for('admin_delete_file', file_id=file[0]) }}"
+        method="POST"
+        onsubmit="return confirm('Are you sure you want to delete this file?');"
+    >
+        <button type="submit" class="admin-delete-btn">
+            🗑 Delete
+        </button>
+    </form>
+</td>
 
                         </tr>
 
@@ -233,4 +226,5 @@
     </main>
 
 </body>
+
 </html>

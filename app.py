@@ -250,6 +250,58 @@ def admin_dashboard():
         files=files,
     )
 
+@app.route("/admin/delete-file/<int:file_id>", methods=["POST"])
+def admin_delete_file(file_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+
+    try:
+        with conn.cursor() as cur:
+            # Get the S3 key before deleting the database record
+            cur.execute(
+                "SELECT s3_key FROM files WHERE id = %s",
+                (file_id,)
+            )
+            file_record = cur.fetchone()
+
+            if not file_record:
+                flash("File not found.", "danger")
+                return redirect(url_for("admin_dashboard"))
+
+            s3_key = file_record[0]
+
+            # Delete file from S3
+            s3 = get_s3_client()
+            s3.delete_object(
+                Bucket=os.getenv("AWS_BUCKET_NAME"),
+                Key=s3_key
+            )
+
+            # Delete file from database
+            cur.execute(
+                "DELETE FROM files WHERE id = %s",
+                (file_id,)
+            )
+
+        conn.commit()
+        flash("File deleted successfully.", "success")
+
+    except Exception as e:
+        conn.rollback()
+        flash("Unable to delete file.", "danger")
+        print("Admin delete file error:", e)
+
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_dashboard"))
+
 
 @app.route("/dashboard")
 @login_required
