@@ -1,176 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudDropper - Login</title>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-
 <body class="auth-page">
-
-    <div class="auth-container">
-
-        <div class="auth-card">
-
-            <!-- BRAND -->
-            <div class="auth-brand">
-
-                <div class="auth-logo">
-                    ☁
-                </div>
-
+    <main class="auth-container">
+        <section class="auth-card">
+            <a class="auth-brand" href="{{ url_for('login') }}">
+                <span class="auth-logo">☁</span>
                 <span>CloudDropper</span>
+            </a>
 
-            </div>
-
-
-            <!-- HEADING -->
             <div class="auth-heading">
-
                 <h1>Welcome Back</h1>
-
-                <p>
-                    Login to manage your cloud files.
-                </p>
-
+                <p>Login to manage your cloud files.</p>
             </div>
 
-
-            <!-- FLASH MESSAGES -->
             {% with messages = get_flashed_messages(with_categories=true) %}
-
                 {% if messages %}
-
-                    {% for category, message in messages %}
-
-                        <div class="auth-message {{ category }}">
-                            {{ message }}
-                        </div>
-
-                    {% endfor %}
-
+                    <div class="auth-messages">
+                        {% for category, message in messages %}
+                            <div class="auth-message {{ category }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
                 {% endif %}
-
             {% endwith %}
 
-
-            <!-- LOGIN FORM -->
-            <form method="POST"
-                  action="{{ url_for('login') }}"
-                  class="auth-form">
-
-
-                <!-- EMAIL -->
+            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
                 <div class="form-group">
-
-                    <label for="email">
-                        Email Address
-                    </label>
-
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        autocomplete="email"
-                        required
-                    >
-
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email"
+                           placeholder="Enter your email"
+                           autocomplete="email" required>
                 </div>
 
-
-                <!-- PASSWORD -->
                 <div class="form-group">
-
-                    <label for="password">
-                        Password
-                    </label>
-
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                        required
-                    >
-
+                    <label for="password">Password</label>
+                    <div class="password-wrap">
+                        <input type="password" id="password" name="password"
+                               placeholder="Enter your password"
+                               autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" id="togglePassword">Show</button>
+                    </div>
                 </div>
 
-
-                <!-- SHOW PASSWORD -->
-                <label class="show-password">
-
-                    <input
-                        type="checkbox"
-                        id="showPassword"
-                    >
-
-                    <span>Show password</span>
-
-                </label>
-
-
-                <!-- LOGIN BUTTON -->
-                <button
-                    type="submit"
-                    class="auth-button"
-                >
-                    Login
-                </button>
-
+                <button type="submit" class="auth-button">Login</button>
             </form>
 
-
-            <!-- REGISTER LINK -->
-            <div class="auth-switch">
-
+            <p class="auth-switch">
                 Don't have an account?
+                <a href="{{ url_for('register') }}">Create Account</a>
+            </p>
+        </section>
+    </main>
 
-                <a href="{{ url_for('register') }}">
-                    Create Account
-                </a>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- SHOW / HIDE PASSWORD -->
-    <script>
-
-        const passwordInput =
-            document.getElementById("password");
-
-        const showPassword =
-            document.getElementById("showPassword");
-
-
-        showPassword.addEventListener("change", function () {
-
-            if (this.checked) {
-
-                passwordInput.type = "text";
-
-            } else {
-
-                passwordInput.type = "password";
-
-            }
-
-        });
-
-    </script>
-
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
-
 </html>
