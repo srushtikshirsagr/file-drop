@@ -1151,3 +1151,55 @@ a { text-decoration: none; }
 .admin-table td:last-child form {
     margin: 0;
 }
+
+
+.admin-user-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: #182033;
+}
+
+.admin-file-name {
+    font-weight: 600;
+    color: #182033;
+    white-space: nowrap;
+}
+
+.admin-role {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 65px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-role-admin {
+    background: #eeeaff;
+    color: #5b4ee8;
+}
+
+.admin-role-user {
+    background: #e8f8ef;
+    color: #16834a;
+}
+
+.admin-current-user {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 105px;
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 9px;
+    background: #f1f2f6;
+    color: #777d8f;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+

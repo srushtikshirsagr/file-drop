@@ -78,10 +78,11 @@
         </section>
 
 
-        <!-- USERS -->
+
         <section class="admin-section">
 
             <div class="admin-section-header">
+
                 <div>
                     <span class="admin-section-kicker">USER MANAGEMENT</span>
                     <h2>Registered Users</h2>
@@ -90,6 +91,7 @@
                 <span class="admin-count">
                     {{ total_users }} Users
                 </span>
+
             </div>
 
 
@@ -103,8 +105,10 @@
                             <th>Email</th>
                             <th>Role</th>
                             <th>Joined</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
+
 
                     <tbody>
 
@@ -112,26 +116,68 @@
 
                         <tr>
 
+                            <!-- User Name -->
                             <td>
-                                <strong>{{ user[1] }}</strong>
+                                <div class="admin-user-name">
+                                    👤 {{ user[1] }}
+                                </div>
                             </td>
 
-                            <td>{{ user[2] }}</td>
 
+                            <!-- Email -->
                             <td>
+                                {{ user[2] }}
+                            </td>
+
+
+                            <!-- Role -->
+                            <td>
+
                                 {% if user[3] == "admin" %}
-                                <span class="role-badge admin-role">
-                                    👑 ADMIN
+
+                                <span class="admin-role admin-role-admin">
+                                    Admin
                                 </span>
+
                                 {% else %}
-                                <span class="role-badge user-role">
-                                    USER
+
+                                <span class="admin-role admin-role-user">
+                                    User
                                 </span>
+
                                 {% endif %}
+
                             </td>
 
+
+                            <!-- Joined -->
                             <td>
-                                {{ user[4].strftime("%d %b %Y") }}
+                                {{ user[4] }}
+                            </td>
+
+
+                            <!-- Delete User -->
+                            <td>
+
+                                {% if user[0] != session.get("user_id") %}
+
+                                <form action="{{ url_for('admin_delete_user', user_id=user[0]) }}" method="POST"
+                                    onsubmit="return confirm('Are you sure you want to delete this user and all of their uploaded files?');">
+
+                                    <button type="submit" class="admin-delete-btn">
+                                        🗑 Delete
+                                    </button>
+
+                                </form>
+
+                                {% else %}
+
+                                <span class="admin-current-user">
+                                    Current Admin
+                                </span>
+
+                                {% endif %}
+
                             </td>
 
                         </tr>
@@ -139,8 +185,8 @@
                         {% else %}
 
                         <tr>
-                            <td colspan="4" class="empty-table">
-                                No users found.
+                            <td colspan="5" class="empty-table">
+                                No registered users found.
                             </td>
                         </tr>
 
@@ -155,10 +201,12 @@
         </section>
 
 
-        <!-- FILES -->
+
+
         <section class="admin-section">
 
             <div class="admin-section-header">
+
                 <div>
                     <span class="admin-section-kicker">FILE MANAGEMENT</span>
                     <h2>All Uploaded Files</h2>
@@ -167,6 +215,7 @@
                 <span class="admin-count">
                     {{ total_files }} Files
                 </span>
+
             </div>
 
 
@@ -176,14 +225,15 @@
 
                     <thead>
                         <tr>
-                            <<th>File</th>
-                                <th>User</th>
-                                <th>Type</th>
-                                <th>Size</th>
-                                <th>Uploaded</th>
-                                <th>Action</th>
+                            <th>File</th>
+                            <th>User</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
+
 
                     <tbody>
 
@@ -191,24 +241,56 @@
 
                         <tr>
 
+                            <!-- File Name -->
                             <td>
-    <form
-        action="{{ url_for('admin_delete_file', file_id=file[0]) }}"
-        method="POST"
-        onsubmit="return confirm('Are you sure you want to delete this file?');"
-    >
-        <button type="submit" class="admin-delete-btn">
-            🗑 Delete
-        </button>
-    </form>
-</td>
+                                <div class="admin-file-name">
+                                    📄 {{ file[1] }}
+                                </div>
+                            </td>
+
+
+                            <!-- User -->
+                            <td>
+                                {{ file[5] }}
+                            </td>
+
+
+                            <!-- File Type -->
+                            <td>
+                                {{ file[2] }}
+                            </td>
+
+
+                            <!-- File Size -->
+                            <td>
+                                {{ file[3] }}
+                            </td>
+
+
+                            <!-- Uploaded -->
+                            <td>
+                                {{ file[4] }}
+                            </td>
+
+
+                            <!-- Delete File -->
+                            <td>
+                                <form action="{{ url_for('admin_delete_file', file_id=file[0]) }}" method="POST"
+                                    onsubmit="return confirm('Are you sure you want to delete this file?');">
+
+                                    <button type="submit" class="admin-delete-btn">
+                                        🗑 Delete
+                                    </button>
+
+                                </form>
+                            </td>
 
                         </tr>
 
                         {% else %}
 
                         <tr>
-                            <td colspan="5" class="empty-table">
+                            <td colspan="6" class="empty-table">
                                 No uploaded files found.
                             </td>
                         </tr>
@@ -222,6 +304,7 @@
             </div>
 
         </section>
+
 
     </main>
 

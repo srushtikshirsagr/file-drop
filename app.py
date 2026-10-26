@@ -303,6 +303,87 @@ def admin_delete_file(file_id):
     return redirect(url_for("admin_dashboard"))
 
 
+
+@app.route("/admin/delete-user/<int:user_id>", methods=["POST"])
+def admin_delete_user(user_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "danger")
+        return redirect(url_for("dashboard"))
+
+    # Prevent admin from deleting their own account
+    if user_id == session.get("user_id"):
+        flash("You cannot delete your own admin account.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    conn = get_db_connection()
+
+    try:
+        with conn.cursor() as cur:
+
+            # Get all files belonging to this user
+            cur.execute(
+                "SELECT id, s3_key FROM files WHERE user_id = %s",
+                (user_id,)
+            )
+            user_files = cur.fetchall()
+
+            # Delete files from S3
+            s3 = get_s3_client()
+            bucket_name = os.getenv("AWS_BUCKET_NAME")
+
+            for file_record in user_files:
+                s3_key = file_record[1]
+
+                try:
+                    s3.delete_object(
+                        Bucket=bucket_name,
+                        Key=s3_key
+                    )
+                except Exception as s3_error:
+                    print("S3 delete error:", s3_error)
+
+            # Delete user's file records from database
+            cur.execute(
+                "DELETE FROM files WHERE user_id = %s",
+                (user_id,)
+            )
+
+            # Check whether user exists
+            cur.execute(
+                "SELECT id FROM users WHERE id = %s",
+                (user_id,)
+            )
+            user = cur.fetchone()
+
+            if not user:
+                flash("User not found.", "danger")
+                conn.rollback()
+                return redirect(url_for("admin_dashboard"))
+
+            # Delete user
+            cur.execute(
+                "DELETE FROM users WHERE id = %s",
+                (user_id,)
+            )
+
+        conn.commit()
+
+        flash("User and their uploaded files were deleted successfully.", "success")
+
+    except Exception as e:
+        conn.rollback()
+        print("Admin delete user error:", e)
+        flash("Unable to delete user.", "danger")
+
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
