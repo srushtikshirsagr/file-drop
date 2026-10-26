@@ -169,9 +169,8 @@ def login():
         try:
             with conn.cursor() as cur:
                 cur.execute(
-                    "SELECT id, name, password_hash, role FROM users WHERE email = %s",
-                    (email,),
-                )
+                    "SELECT id, name, password_hash, role, is_blocked FROM users WHERE email = %s",
+                    (email,))
                 user = cur.fetchone()
         finally:
             conn.close()
