@@ -1,3 +1,4 @@
+
 import os
 from functools import wraps
 from io import BytesIO
@@ -123,6 +124,10 @@ def register():
 
         if not name or not email or not password:
             flash("All fields are required.", "danger")
+            return render_template("register.html")
+
+        if not email.endswith("@gmail.com"):
+            flash("Please enter a valid Gmail address.", "danger")
             return render_template("register.html")
 
         if len(password) < 6:
