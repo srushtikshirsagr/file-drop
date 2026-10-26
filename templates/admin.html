@@ -104,6 +104,7 @@
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
+                            <th>Status</th>
                             <th>Joined</th>
                             <th>Action</th>
                         </tr>
@@ -149,6 +150,14 @@
 
                             </td>
 
+                            <td>
+                                {% if user[4] %}
+                                <span class="admin-status admin-status-blocked">Blocked</span>
+                                {% else %}
+                                <span class="admin-status admin-status-active">Active</span>
+                                {% endif %}
+                            </td>
+
 
                             <!-- Joined -->
                             <td>
@@ -158,26 +167,32 @@
 
                             <!-- Delete User -->
                             <td>
-
                                 {% if user[0] != session.get("user_id") %}
+                                <div class="admin-action-group">
 
-                                <form action="{{ url_for('admin_delete_user', user_id=user[0]) }}" method="POST"
-                                    onsubmit="return confirm('Are you sure you want to delete this user and all of their uploaded files?');">
+                                    <form action="{{ url_for('admin_toggle_user', user_id=user[0]) }}" method="POST">
+                                        {% if user[4] %}
+                                        <button type="submit" class="admin-toggle-btn admin-unblock-btn">
+                                            🔓 Unblock
+                                        </button>
+                                        {% else %}
+                                        <button type="submit" class="admin-toggle-btn admin-block-btn">
+                                            🔒 Block
+                                        </button>
+                                        {% endif %}
+                                    </form>
 
-                                    <button type="submit" class="admin-delete-btn">
-                                        🗑 Delete
-                                    </button>
+                                    <form action="{{ url_for('admin_delete_user', user_id=user[0]) }}" method="POST"
+                                        onsubmit="return confirm('Are you sure you want to delete this user and all of their uploaded files?');">
+                                        <button type="submit" class="admin-delete-btn">
+                                            🗑 Delete
+                                        </button>
+                                    </form>
 
-                                </form>
-
+                                </div>
                                 {% else %}
-
-                                <span class="admin-current-user">
-                                    Current Admin
-                                </span>
-
+                                <span class="admin-current-user">Current Admin</span>
                                 {% endif %}
-
                             </td>
 
                         </tr>

@@ -137,7 +137,7 @@ def register():
         conn = get_db_connection()
         try:
             with conn.cursor() as cur:
-                cur.execute("SELECT id FROM users WHERE email = %s", (email,))
+                cur.execute("SELECT id, name, password_hash, role, is_blocked FROM users WHERE email = %s",(email,))
                 if cur.fetchone():
                     flash("An account with this email already exists.", "danger")
                     return render_template("register.html")
@@ -178,6 +178,10 @@ def login():
 
         if not user or not check_password_hash(user[2], password):
             flash("Invalid email or password.", "danger")
+            return render_template("login.html")
+        
+        if user[4]:
+            flash("Your account has been blocked by the administrator.", "danger")
             return render_template("login.html")
 
         session.clear()
@@ -227,7 +231,7 @@ def admin_dashboard():
 
             # Registered users
             cur.execute("""
-                SELECT id, name, email, role, created_at
+                SELECT id, name, email, role, is_blocked, created_at
                 FROM users
                 ORDER BY created_at DESC
             """)
@@ -254,6 +258,57 @@ def admin_dashboard():
         users=users,
         files=files,
     )
+
+@app.route("/admin/toggle-user/<int:user_id>", methods=["POST"])
+def admin_toggle_user(user_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        flash("Access denied.", "danger")
+        return redirect(url_for("dashboard"))
+
+    if user_id == session.get("user_id"):
+        flash("You cannot block your own admin account.", "danger")
+        return redirect(url_for("admin_dashboard"))
+
+    conn = get_db_connection()
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT is_blocked FROM users WHERE id = %s",
+                (user_id,)
+            )
+            user = cur.fetchone()
+
+            if not user:
+                flash("User not found.", "danger")
+                return redirect(url_for("admin_dashboard"))
+
+            new_status = not user[0]
+
+            cur.execute(
+                "UPDATE users SET is_blocked = %s WHERE id = %s",
+                (new_status, user_id)
+            )
+
+        conn.commit()
+
+        if new_status:
+            flash("User blocked successfully.", "success")
+        else:
+            flash("User unblocked successfully.", "success")
+
+    except Exception as e:
+        conn.rollback()
+        print("Admin toggle user error:", e)
+        flash("Unable to update user status.", "danger")
+
+    finally:
+        conn.close()
+
+    return redirect(url_for("admin_dashboard"))
 
 @app.route("/admin/delete-file/<int:file_id>", methods=["POST"])
 def admin_delete_file(file_id):
@@ -516,6 +571,43 @@ def upload_file():
     flash("File uploaded successfully.", "success")
     return redirect(url_for("dashboard"))
 
+
+@app.route("/open/<int:file_id>")
+def open_file(file_id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_db_connection()
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT original_name, s3_key FROM files WHERE id = %s AND user_id = %s",
+                (file_id, session["user_id"])
+            )
+            file_record = cur.fetchone()
+    finally:
+        conn.close()
+
+    if not file_record:
+        flash("File not found.", "danger")
+        return redirect(url_for("dashboard"))
+
+    original_name, s3_key = file_record
+
+    s3 = get_s3_client()
+
+    url = s3.generate_presigned_url(
+        "get_object",
+        Params={
+            "Bucket": os.getenv("AWS_BUCKET_NAME"),
+            "Key": s3_key,
+            "ResponseContentDisposition": "inline"
+        },
+        ExpiresIn=300
+    )
+
+    return redirect(url)
 
 @app.route("/download/<int:file_id>")
 @login_required
