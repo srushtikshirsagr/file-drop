@@ -594,19 +594,40 @@ def open_file(file_id):
 
     original_name, s3_key = file_record
 
+    file_extension = original_name.rsplit(".", 1)[-1].lower()
+
+    content_types = {
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+        "pdf": "application/pdf",
+        "mp4": "video/mp4",
+        "ppt": "application/vnd.ms-powerpoint",
+        "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    }
+
+    content_type = content_types.get(
+        file_extension,
+        "application/octet-stream"
+    )
+
+    if file_extension in {"ppt", "pptx"}:
+        disposition = "attachment"
+    else:
+        disposition = "inline"
+
     s3 = get_s3_client()
 
     url = s3.generate_presigned_url(
-        "get_object",
-        Params={
-            "Bucket": os.getenv("AWS_BUCKET_NAME"),
-            "Key": s3_key,
-            "ResponseContentDisposition": "inline"
-        },
-        ExpiresIn=300
-    )
-
+    "get_object",
+    Params={
+        "Bucket": os.getenv("AWS_BUCKET_NAME"),
+        "Key": s3_key
+    },
+    ExpiresIn=300
+)
     return redirect(url)
+
 
 @app.route("/download/<int:file_id>")
 @login_required
