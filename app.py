@@ -43,10 +43,18 @@ def get_db_connection():
 
 
 def get_s3_client():
-    # On EC2 this uses the attached IAM role.
-    # Locally it can use AWS credentials configured in the environment.
-    return boto3.client("s3", region_name=AWS_REGION)
+    from botocore.config import Config
 
+    return boto3.client(
+        "s3",
+        region_name=os.getenv("AWS_REGION"),
+        config=Config(
+            signature_version="s3v4",
+            s3={
+                "addressing_style": "virtual"
+            }
+        )
+    )
 
 def init_db():
     conn = get_db_connection()
